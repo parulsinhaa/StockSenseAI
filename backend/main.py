@@ -6,6 +6,11 @@ app = FastAPI()
 def home():
     return {"message": "StockSenseAI Backend Running "}
 
-@app.get("/test")
-def test():
-    return {"status": "working"}
+@app.post("/analyze")
+def analyze():
+    return {
+        "decision": "BUY",
+        "confidence": 0.82,
+        "reasoning": "Strong market trend and positive signals",
+        "risk": "MEDIUM"
+    }
