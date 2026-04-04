@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StockSense AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { background: #0a0f1e; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+  .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
+  .gradient-text {
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  background-clip: text;              /* ✅ fallback */
+  -webkit-text-fill-color: transparent;
+  display: inline-block;              /* ✅ IMPORTANT FIX */
+}
+  .btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #0a0f1e; font-weight: 700; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .tab-active { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #0a0f1e; font-weight: 700; }
+  .chat-msg { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .ticker-bar { animation: ticker 30s linear infinite; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .pnl-pos { color: #34d399; }
+  .pnl-neg { color: #f87171; }
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  .section { display: none; } .section.active { display: block; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Landing Page -->
+<div id="landing" class="min-h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-8 py-5 border-b border-white/5">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-black">S</div>
+      <span class="font-bold text-lg">StockSense <span class="gradient-text">AI</span></span>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="showApp()" class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition">Log in</button>
+      <button onclick="showApp()" class="px-4 py-2 rounded-lg text-sm btn-primary transition">Get Started Free</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="flex-1 flex flex-col items-center justify-center text-center px-4 py-20">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs text-slate-400 mb-6">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      Live market data · AI-powered · Paper trading
+    </div>
+    <h1 class="text-5xl md:text-6xl font-black mb-5 leading-tight">
+      Your <span class="gradient-text">intelligent</span><br/>market companion
+    </h1>
+    <p class="text-slate-400 text-lg max-w-lg mb-8">
+      Stop switching between 4 apps. Get NIFTY, SENSEX, stock analysis, and an AI that explains it all — in one place.
+    </p>
+    <div class="flex gap-3 flex-wrap justify-center">
+      <button onclick="showApp()" class="px-6 py-3 rounded-xl btn-primary text-sm transition">Start for free</button>
+      <button onclick="showApp()" class="px-6 py-3 rounded-xl glass text-sm hover:bg-white/5 transition">Try as guest</button>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="flex flex-wrap gap-3 justify-center mt-12">
+      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">NIFTY &amp; SENSEX live</span>
+      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">AI stock analysis</span>
+      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Paper trading simulator</span>
+      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Portfolio tracker</span>
+      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Trade history</span>
+    </div>
+
+    <!-- Pricing preview -->
+    <div class="mt-16 grid md:grid-cols-2 gap-4 max-w-xl w-full">
+      <div class="glass rounded-2xl p-5 text-left">
+        <div class="text-xs text-slate-400 mb-1">Free</div>
+        <div class="text-2xl font-black mb-2">₹0 <span class="text-sm font-normal text-slate-400">/mo</span></div>
+        <ul class="text-xs text-slate-400 space-y-1">
+          <li>✓ Market dashboard</li>
+          <li>✓ 10 AI queries/day</li>
+          <li>✓ Basic trading sim</li>
+        </ul>
+      </div>
+      <div class="rounded-2xl p-5 text-left" style="background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(129,140,248,0.15)); border: 1px solid rgba(56,189,248,0.3);">
+        <div class="text-xs text-sky-400 mb-1">Pro</div>
+        <div class="text-2xl font-black mb-2">₹299 <span class="text-sm font-normal text-slate-400">/mo</span></div>
+        <ul class="text-xs text-slate-400 space-y-1">
+          <li>✓ Unlimited AI analysis</li>
+          <li>✓ Full trading history</li>
+          <li>✓ Portfolio analytics</li>
+        </ul>
+        <button class="mt-3 w-full py-2 rounded-lg btn-primary text-xs" onclick="showApp()">Upgrade to Pro</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App Dashboard -->
+<div id="app" class="hidden min-h-screen flex flex-col">
+
+  <!-- Top ticker -->
+  <div class="bg-black/30 border-b border-white/5 py-2 overflow-hidden">
+    <div class="ticker-bar flex gap-8 text-xs whitespace-nowrap" id="ticker">
+      <span class="text-slate-500">Loading market data...</span>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-6 py-3 border-b border-white/5 glass sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg btn-primary flex items-center justify-center text-xs font-black">S</div>
+      <span class="font-bold">StockSense <span class="gradient-text">AI</span></span>
+    </div>
+    <div class="flex gap-1">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab px-4 py-2 rounded-lg text-sm transition tab-active">Dashboard</button>
+      <button onclick="switchTab('trade')" id="tab-trade" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">Trade</button>
+      <button onclick="switchTab('portfolio')" id="tab-portfolio" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">Portfolio</button>
+      <button onclick="switchTab('ai')" id="tab-ai" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">AI Chat</button>
+    </div>
+    <button onclick="goBack()" class="text-xs text-slate-500 hover:text-white transition">← Back</button>
+  </nav>
+
+  <div class="flex-1 p-6 max-w-7xl mx-auto w-full">
+
+    <!-- Dashboard Section -->
+    <div id="sec-dashboard" class="section active">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="market-cards">
+        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
+        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
+        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
+        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Chart -->
+        <div class="glass rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Market Overview</h3>
+            <span class="text-xs text-slate-400">Live prices</span>
+          </div>
+          <canvas id="marketChart" height="200"></canvas>
+        </div>
+
+        <!-- Quick AI -->
+        <div class="glass rounded-2xl p-5">
+          <h3 class="font-semibold mb-4">Quick AI Insights</h3>
+          <div class="space-y-2" id="quick-insights">
+            <div class="p-3 rounded-lg bg-white/5 text-xs text-slate-400">Ask AI about any stock or market trend...</div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <input id="quick-input" type="text" placeholder="e.g. Why is NIFTY falling?" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
+            <button onclick="quickAsk()" class="px-4 py-2 rounded-lg btn-primary text-xs">Ask</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock grid -->
+      <div class="mt-6">
+        <h3 class="font-semibold mb-3">Stocks</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="stock-grid"></div>
+      </div>
+    </div>
+
+    <!-- Trade Section -->
+    <div id="sec-trade" class="section">
+      <div class="max-w-lg mx-auto">
+        <div class="glass rounded-2xl p-6">
+          <h2 class="font-bold text-lg mb-1">Trading Simulator</h2>
+          <p class="text-xs text-slate-400 mb-5">Practice with ₹1,00,000 virtual cash. No real money involved.</p>
+
+          <div class="mb-4">
+            <label class="text-xs text-slate-400 mb-1 block">Stock Symbol</label>
+            <select id="trade-symbol" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+              <option value="RELIANCE">RELIANCE</option>
+              <option value="TCS">TCS</option>
+              <option value="INFY">INFY</option>
+              <option value="HDFC">HDFC Bank</option>
+              <option value="ICICI">ICICI Bank</option>
+              <option value="WIPRO">WIPRO</option>
+              <option value="BAJAJ">Bajaj Finance</option>
+              <option value="MARUTI">Maruti Suzuki</option>
+              <option value="TATAMOTORS">Tata Motors</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-xs text-slate-400 mb-1 block">Current Price</label>
+            <div id="trade-price" class="text-2xl font-black gradient-text">Loading...</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="text-xs text-slate-400 mb-1 block">Amount (₹)</label>
+            <input id="trade-amount" type="number" placeholder="e.g. 10000" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
+          </div>
+
+          <div id="trade-preview" class="mb-4 p-3 rounded-lg bg-white/5 text-xs text-slate-400 hidden"></div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="executeTrade('buy')" class="py-3 rounded-xl btn-primary text-sm font-bold">Buy</button>
+            <button onclick="executeTrade('sell')" class="py-3 rounded-xl glass border border-red-400/30 text-red-400 text-sm font-bold hover:bg-red-400/10 transition">Sell</button>
+          </div>
+
+          <div id="trade-result" class="mt-4 p-3 rounded-lg text-sm text-center hidden"></div>
+        </div>
+
+        <!-- Trade History -->
+        <div class="glass rounded-2xl p-5 mt-4">
+          <h3 class="font-semibold mb-3">Recent Trades</h3>
+          <div id="trade-history" class="space-y-2 text-xs text-slate-400">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portfolio Section -->
+    <div id="sec-portfolio" class="section">
+      <div class="grid md:grid-cols-3 gap-4 mb-6" id="portfolio-summary">
+        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Available Cash</div><div id="p-cash" class="text-xl font-black">--</div></div>
+        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Portfolio Value</div><div id="p-value" class="text-xl font-black">--</div></div>
+        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Total P&amp;L</div><div id="p-pnl" class="text-xl font-black">--</div></div>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="font-semibold mb-4">Holdings</h3>
+        <div id="holdings-table" class="space-y-3 text-sm">Loading...</div>
+      </div>
+    </div>
+
+    <!-- AI Chat Section -->
+    <div id="sec-ai" class="section">
+      <div class="max-w-2xl mx-auto">
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="p-4 border-b border-white/5 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full btn-primary flex items-center justify-center text-xs font-black">AI</div>
+            <div>
+              <div class="text-sm font-semibold">StockSense AI</div>
+              <div class="text-xs text-emerald-400">Online · Market-aware</div>
+            </div>
+          </div>
+
+          <div id="chat-messages" class="h-96 overflow-y-auto p-4 space-y-4">
+            <div class="chat-msg flex gap-3">
+              <div class="w-7 h-7 rounded-full btn-primary flex items-center justify-center text-xs font-black flex-shrink-0">AI</div>
+              <div class="glass rounded-2xl rounded-tl-sm px-4 py-3 text-sm max-w-xs">
+                Namaste! Main StockSense AI hoon. Aaj market ke baare mein kuch poochhna hai? NIFTY, SENSEX, ya koi specific stock — sab kuch batao!
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 border-t border-white/5 flex gap-2">
+            <input id="chat-input" type="text" placeholder="Ask about any stock, market trend, or trading strategy..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
+            <button onclick="sendChat()" class="px-4 py-3 rounded-xl btn-primary text-sm font-bold">Send</button>
+          </div>
+        </div>
+
+        <!-- Suggested prompts -->
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button onclick="askSuggested('NIFTY aaj kaise hai?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">NIFTY aaj kaise hai?</button>
+          <button onclick="askSuggested('Mujhe RELIANCE kharidna chahiye?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">RELIANCE kharidna chahiye?</button>
+          <button onclick="askSuggested('Mera portfolio kaisa hai?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">Mera portfolio kaisa hai?</button>
+          <button onclick="askSuggested('Beginner ke liye best stocks kaunse hain?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">Beginner stocks?</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+let marketData = {};
+let chatHistory = [];
+let ws = null;
+let chart = null;
+
+function showApp() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  loadMarket();
+  loadPortfolio();
+  loadHistory();
+  initChat();
+}
+
+function goBack() {
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('tab-active'); t.classList.add('text-slate-400'); });
+  document.getElementById('sec-' + tab).classList.add('active');
+  const btn = document.getElementById('tab-' + tab);
+  btn.classList.add('tab-active'); btn.classList.remove('text-slate-400');
+  if (tab === 'portfolio') loadPortfolio();
+  if (tab === 'trade') updateTradePrice();
+}
+
+async function loadMarket() {
+  try {
+    const res = await fetch(API + '/api/market');
+    marketData = await res.json();
+    renderMarketCards();
+    renderStockGrid();
+    renderTicker();
+    renderChart();
+  } catch(e) {
+    console.log('Market load error:', e);
+  }
+}
+
+function renderMarketCards() {
+  const keys = ['NIFTY','SENSEX','RELIANCE','TCS'];
+  const container = document.getElementById('market-cards');
+  container.innerHTML = keys.map(k => `
+    <div class="glass rounded-xl p-4">
+      <div class="text-xs text-slate-400 mb-1">${k}</div>
+      <div class="text-lg font-black">₹${Number(marketData[k]||0).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+    </div>`).join('');
+}
+
+function renderStockGrid() {
+  const stocks = ['INFY','HDFC','ICICI','WIPRO','BAJAJ','MARUTI','TATAMOTORS'];
+  const g = document.getElementById('stock-grid');
+  g.innerHTML = stocks.filter(s => marketData[s]).map(s => `
+    <div class="glass rounded-xl p-3 cursor-pointer hover:bg-white/5 transition" onclick="askSuggested('Tell me about ${s} stock')">
+      <div class="text-xs text-slate-400 mb-1">${s}</div>
+      <div class="font-bold">₹${Number(marketData[s]||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
+    </div>`).join('');
+}
+
+function renderTicker() {
+  const items = Object.entries(marketData).map(([k,v]) => `<span class="text-slate-300">${k}</span> <span class="text-sky-400">₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:0})}</span>`);
+  const doubled = [...items,...items].join('<span class="text-white/20 mx-4">|</span>');
+  document.getElementById('ticker').innerHTML = doubled;
+}
+
+function renderChart() {
+  const stocks = ['RELIANCE','TCS','INFY','HDFC','ICICI','WIPRO'];
+  const labels = stocks.filter(s => marketData[s]);
+  const values = labels.map(s => marketData[s]);
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('marketChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: 'rgba(56,189,248,0.3)',
+        borderColor: 'rgba(56,189,248,0.8)',
+        borderWidth: 1, borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { size: 10 },
+          callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v) }}
+      }
+    }
+  });
+}
+
+async function loadPortfolio() {
+  try {
+    const res = await fetch(API + '/api/portfolio');
+    const data = await res.json();
+    document.getElementById('p-cash').textContent = '₹' + Number(data.cash).toLocaleString('en-IN', {maximumFractionDigits:0});
+    document.getElementById('p-value').textContent = '₹' + Number(data.total_value).toLocaleString('en-IN', {maximumFractionDigits:0});
+    const totalPnl = data.holdings.reduce((s,h) => s+h.pnl, 0);
+    const pnlEl = document.getElementById('p-pnl');
+    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '₹' + Math.abs(totalPnl).toLocaleString('en-IN',{maximumFractionDigits:0});
+    pnlEl.className = 'text-xl font-black ' + (totalPnl >= 0 ? 'pnl-pos' : 'pnl-neg');
+
+    const table = document.getElementById('holdings-table');
+    if (!data.holdings.length) { table.innerHTML = '<div class="text-slate-500 text-sm">No holdings yet. Go to Trade to buy your first stock.</div>'; return; }
+    table.innerHTML = data.holdings.map(h => `
+      <div class="flex items-center justify-between p-3 glass rounded-xl">
+        <div>
+          <div class="font-semibold">${h.symbol}</div>
+          <div class="text-xs text-slate-400">${h.quantity.toFixed(2)} shares · Avg ₹${h.avg_price.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+        </div>
+        <div class="text-right">
+          <div class="font-semibold">₹${h.value.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+          <div class="text-xs ${h.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${h.pnl >= 0 ? '+' : ''}₹${Math.abs(h.pnl).toLocaleString('en-IN',{maximumFractionDigits:0})} (${h.pnl_pct.toFixed(1)}%)</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function updateTradePrice() {
+  const sym = document.getElementById('trade-symbol').value;
+  try {
+    const res = await fetch(API + '/api/market');
+    const data = await res.json();
+    const price = data[sym] || 0;
+    document.getElementById('trade-price').textContent = '₹' + Number(price).toLocaleString('en-IN', {maximumFractionDigits: 2});
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('trade-symbol');
+  if (sel) sel.addEventListener('change', updateTradePrice);
+  const amt = document.getElementById('trade-amount');
+  if (amt) amt.addEventListener('input', showTradePreview);
+});
+
+function showTradePreview() {
+  const amt = parseFloat(document.getElementById('trade-amount').value);
+  const priceText = document.getElementById('trade-price').textContent.replace(/[₹,]/g,'');
+  const price = parseFloat(priceText);
+  const preview = document.getElementById('trade-preview');
+  if (amt && price) {
+    const qty = amt / price;
+    preview.textContent = `You will get approximately ${qty.toFixed(3)} shares at ₹${price.toLocaleString('en-IN')}`;
+    preview.classList.remove('hidden');
+  }
+}
+
+async function executeTrade(action) {
+  const symbol = document.getElementById('trade-symbol').value;
+  const amount = parseFloat(document.getElementById('trade-amount').value);
+  if (!amount || amount <= 0) { showTradeResult('Please enter a valid amount', false); return; }
+  try {
+    const res = await fetch(API + '/api/trade', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ symbol, action, amount })
+    });
+    const data = await res.json();
+    showTradeResult(data.message, data.success);
+    if (data.success) { loadHistory(); loadPortfolio(); }
+  } catch(e) { showTradeResult('Error connecting to server', false); }
+}
+
+function showTradeResult(msg, success) {
+  const el = document.getElementById('trade-result');
+  el.textContent = msg;
+  el.className = 'mt-4 p-3 rounded-lg text-sm text-center ' + (success ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch(API + '/api/history');
+    const data = await res.json();
+    const el = document.getElementById('trade-history');
+    if (!data.length) { el.innerHTML = '<div class="text-slate-500">No trades yet</div>'; return; }
+    el.innerHTML = data.map(t => `
+      <div class="flex items-center justify-between py-2 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold ${t.action === 'buy' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}">${t.action.toUpperCase()}</span>
+          <span class="font-medium">${t.symbol}</span>
+          <span class="text-slate-500">${t.quantity} shares</span>
+        </div>
+        <div class="text-right">
+          <div>₹${Number(t.total).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+          <div class="text-slate-500 text-xs">${t.timestamp}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+function initChat() {
+  if (ws) ws.close();
+  ws = new WebSocket('ws://localhost:8000/ws/chat');
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'chunk') appendChunk(data.text);
+    if (data.type === 'done') finaliseMsg();
+  };
+}
+
+let currentAiMsg = null;
+
+function appendChunk(text) {
+  if (!currentAiMsg) {
+    currentAiMsg = document.createElement('div');
+    currentAiMsg.className = 'chat-msg flex gap-3';
+    currentAiMsg.innerHTML = `
+      <div class="w-7 h-7 rounded-full btn-primary flex items-center justify-center text-xs font-black flex-shrink-0">AI</div>
+      <div class="glass rounded-2xl rounded-tl-sm px-4 py-3 text-sm max-w-xs md:max-w-sm msg-text"></div>`;
+    document.getElementById('chat-messages').appendChild(currentAiMsg);
+  }
+  currentAiMsg.querySelector('.msg-text').textContent += text;
+  scrollChat();
+}
+
+function finaliseMsg() {
+  if (currentAiMsg) {
+    const text = currentAiMsg.querySelector('.msg-text').textContent;
+    chatHistory.push({ role: 'assistant', content: text });
+  }
+  currentAiMsg = null;
+}
+
+function scrollChat() {
+  const c = document.getElementById('chat-messages');
+  c.scrollTop = c.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addUserMsg(msg);
+  if (!ws || ws.readyState !== WebSocket.OPEN) initChat();
+  chatHistory.push({ role: 'user', content: msg });
+  ws.send(JSON.stringify({ message: msg, history: chatHistory.slice(-10) }));
+}
+
+function addUserMsg(msg) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg flex justify-end';
+  div.innerHTML = `<div class="px-4 py-3 rounded-2xl rounded-tr-sm text-sm max-w-xs" style="background:linear-gradient(135deg,rgba(56,189,248,0.2),rgba(129,140,248,0.2));border:1px solid rgba(56,189,248,0.2)">${msg}</div>`;
+  document.getElementById('chat-messages').appendChild(div);
+  scrollChat();
+}
+
+function askSuggested(msg) {
+  switchTab('ai');
+  setTimeout(() => {
+    document.getElementById('chat-input').value = msg;
+    sendChat();
+  }, 100);
+}
+
+async function quickAsk() {
+  const input = document.getElementById('quick-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const container = document.getElementById('quick-insights');
+  container.innerHTML = '<div class="p-3 rounded-lg bg-white/5 text-xs text-slate-400">Thinking...</div>';
+  if (!ws || ws.readyState !== WebSocket.OPEN) initChat();
+  let response = '';
+  const orig = ws.onmessage;
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'chunk') { response += data.text; container.innerHTML = `<div class="p-3 rounded-lg bg-white/5 text-xs text-slate-300">${response}</div>`; }
+    if (data.type === 'done') ws.onmessage = orig;
+  };
+  ws.send(JSON.stringify({ message: msg, history: [] }));
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement.id === 'chat-input') sendChat();
+  if (e.key === 'Enter' && document.activeElement.id === 'quick-input') quickAsk();
+});
+
+setInterval(() => { if (document.getElementById('app') && !document.getElementById('app').classList.contains('hidden')) loadMarket(); }, 30000);
+</script>
+</body>
+</html>
