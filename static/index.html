@@ -1,558 +1,1443 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>StockSense AI</title>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>StockSense AI — Smarter Investing</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body { background: #0a0f1e; color: #e2e8f0; font-family: 'Inter', sans-serif; }
-  .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); }
-  .gradient-text {
-  background: linear-gradient(135deg, #38bdf8, #818cf8);
-  -webkit-background-clip: text;
-  background-clip: text;              /* ✅ fallback */
-  -webkit-text-fill-color: transparent;
-  display: inline-block;              /* ✅ IMPORTANT FIX */
+:root{
+  --bg:#080d1a;--bg2:#0d1525;--bg3:#111c30;--card:rgba(255,255,255,0.045);
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.15);
+  --text:#e8edf5;--text2:#8fa3c0;--text3:#5a7a99;
+  --blue:#3b9eff;--blue2:#1a7adf;--indigo:#818cf8;
+  --green:#34d399;--red:#f87171;--amber:#fbbf24;
+  --inp-bg:rgba(255,255,255,0.06);
 }
-  .btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #0a0f1e; font-weight: 700; }
-  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-  .tab-active { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #0a0f1e; font-weight: 700; }
-  .chat-msg { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  .ticker-bar { animation: ticker 30s linear infinite; }
-  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  .pnl-pos { color: #34d399; }
-  .pnl-neg { color: #f87171; }
-  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-  .section { display: none; } .section.active { display: block; }
+[data-theme="light"]{
+  --bg:#f0f4fa;--bg2:#ffffff;--bg3:#e8eef8;--card:rgba(255,255,255,0.85);
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.18);
+  --text:#1a2744;--text2:#4a5a80;--text3:#8090b0;
+  --inp-bg:rgba(0,0,0,0.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;transition:background .3s,color .3s;min-height:100vh}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px}
+.card-sm{background:var(--card);border:1px solid var(--border);border-radius:12px}
+.inp{background:var(--inp-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);width:100%;font-size:.875rem;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--blue)}
+.inp::placeholder{color:var(--text3)}
+select.inp option{background:var(--bg2);color:var(--text)}
+.btn{padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-size:.875rem;font-weight:600;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#3b9eff,#818cf8);color:#fff}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{background:var(--inp-bg);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn-danger{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.grad-text{background:linear-gradient(135deg,#3b9eff,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grad-bg{background:linear-gradient(135deg,#3b9eff,#818cf8)}
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.on{display:flex}
+.sec{display:none}
+.sec.on{display:block}
+.tab-a{background:linear-gradient(135deg,#3b9eff,#818cf8);color:#fff;font-weight:700}
+.tab-i{color:var(--text2)}
+.tab-i:hover{color:var(--text)}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+.badge-green{background:rgba(52,211,153,.12);color:var(--green)}
+.badge-red{background:rgba(248,113,113,.12);color:var(--red)}
+.badge-blue{background:rgba(59,158,255,.12);color:var(--blue)}
+.fade-in{animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.ticker-wrap{overflow:hidden;position:relative}
+.ticker-inner{display:flex;gap:32px;white-space:nowrap;animation:tick 45s linear infinite}
+.ticker-inner:hover{animation-play-state:paused}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(59,158,255,.25);border-radius:4px}
+/* Chat */
+.chat-bubble-ai{background:var(--card);border:1px solid var(--border);border-radius:14px;border-top-left-radius:4px;padding:10px 14px;font-size:.8125rem;line-height:1.65;white-space:pre-wrap;max-width:82%}
+.chat-bubble-user{background:linear-gradient(135deg,rgba(59,158,255,.2),rgba(129,140,248,.2));border:1px solid rgba(59,158,255,.25);border-radius:14px;border-top-right-radius:4px;padding:10px 14px;font-size:.8125rem;line-height:1.65;max-width:82%}
+/* Floating AI */
+#fab{position:fixed;bottom:24px;right:24px;z-index:200;width:54px;height:54px;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.7rem;font-weight:900;color:#fff;background:linear-gradient(135deg,#3b9eff,#818cf8);box-shadow:0 4px 20px rgba(59,158,255,.4);transition:transform .2s}
+#fab:hover{transform:scale(1.1)}
+#ai-drawer{position:fixed;bottom:90px;right:24px;z-index:199;width:360px;max-height:540px;display:none;flex-direction:column;border-radius:18px}
+#ai-drawer.open{display:flex}
+/* XP bar */
+.xp-bar-track{height:6px;background:var(--inp-bg);border-radius:3px;overflow:hidden}
+.xp-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#3b9eff,#818cf8);transition:width .6s ease}
+/* Quiz */
+.quiz-opt{padding:12px 16px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .2s;font-size:.8125rem;color:var(--text)}
+.quiz-opt:hover{border-color:var(--blue);background:rgba(59,158,255,.06)}
+.quiz-opt.correct{border-color:var(--green)!important;background:rgba(52,211,153,.08)!important;color:var(--green)}
+.quiz-opt.wrong{border-color:var(--red)!important;background:rgba(248,113,113,.08)!important;color:var(--red)}
+.game-card{cursor:pointer;transition:all .2s}
+.game-card:hover{transform:translateY(-3px);border-color:rgba(59,158,255,.35)!important}
+/* Portfolio chart */
+.holding-bar{height:4px;border-radius:2px;background:linear-gradient(90deg,#3b9eff,#818cf8)}
+/* Landing nav */
+.land-nav{background:rgba(8,13,26,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+[data-theme="light"] .land-nav{background:rgba(240,244,250,.9)}
+/* Auth split */
+.auth-split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+@media(max-width:768px){.auth-split{grid-template-columns:1fr}}
+.auth-left{background:linear-gradient(145deg,#0d1525,#1a2744);display:flex;flex-direction:column;justify-content:center;padding:48px}
+[data-theme="light"] .auth-left{background:linear-gradient(145deg,#1a2744,#2d4a8a)}
+.auth-right{background:var(--bg2);display:flex;flex-direction:column;justify-content:center;padding:48px}
+/* Dark mode toggle */
+.toggle-pill{width:44px;height:24px;background:var(--inp-bg);border:1px solid var(--border);border-radius:12px;position:relative;cursor:pointer;transition:background .2s}
+.toggle-pill.on{background:linear-gradient(135deg,#3b9eff,#818cf8)}
+.toggle-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s}
+.toggle-pill.on .toggle-knob{transform:translateX(20px)}
+/* Stat cards on landing */
+.stat-card{text-align:center;padding:24px;border-radius:16px;background:var(--card);border:1px solid var(--border)}
+/* Section headers */
+.section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
 </style>
 </head>
-<body class="min-h-screen">
+<body>
 
-<!-- Landing Page -->
-<div id="landing" class="min-h-screen flex flex-col">
-  <!-- Navbar -->
-  <nav class="flex items-center justify-between px-8 py-5 border-b border-white/5">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center text-sm font-black">S</div>
-      <span class="font-bold text-lg">StockSense <span class="gradient-text">AI</span></span>
+<!-- ═══ LANDING ════════════════════════════════════════════════════════════════ -->
+<div id="pg-land" class="page on" style="background:var(--bg)">
+
+  <!-- Top ticker bar -->
+  <div class="ticker-wrap py-2" style="background:rgba(59,158,255,.06);border-bottom:1px solid var(--border)">
+    <div class="ticker-inner text-xs" id="land-ticker">
+      <span style="color:var(--text2)">Loading market data...</span>
     </div>
-    <div class="flex gap-3">
-      <button onclick="showApp()" class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition">Log in</button>
-      <button onclick="showApp()" class="px-4 py-2 rounded-lg text-sm btn-primary transition">Get Started Free</button>
+  </div>
+
+  <!-- Nav -->
+  <nav class="land-nav px-6 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="w-8 h-8 rounded-lg grad-bg flex items-center justify-center text-white text-sm font-black">S</div>
+      <span class="font-bold text-base">StockSense <span class="grad-text">AI</span></span>
+    </div>
+    <div class="hidden md:flex items-center gap-5 text-sm" style="color:var(--text2)">
+      <a href="#features" class="hover:text-white transition cursor-pointer">Features</a>
+      <a href="#horoscope" class="hover:text-white transition cursor-pointer">Markets</a>
+      <a href="#experts" class="hover:text-white transition cursor-pointer">Learn</a>
+      <a href="#pricing" class="hover:text-white transition cursor-pointer">Pricing</a>
+      <a href="#faq" class="hover:text-white transition cursor-pointer">FAQ</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="toggle-pill" id="land-theme-toggle" onclick="toggleTheme()"><div class="toggle-knob"></div></div>
+      <button onclick="showPage('pg-login')" class="btn btn-ghost text-sm py-2 px-4">Log in</button>
+      <button onclick="showPage('pg-signup')" class="btn btn-primary text-sm py-2 px-4">Get Started Free</button>
     </div>
   </nav>
 
   <!-- Hero -->
-  <div class="flex-1 flex flex-col items-center justify-center text-center px-4 py-20">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs text-slate-400 mb-6">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      Live market data · AI-powered · Paper trading
+  <section class="flex flex-col items-center justify-center text-center px-4 py-20 md:py-28">
+    <div class="badge badge-blue mb-5" style="font-size:.75rem;padding:6px 14px">
+      <span style="width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite"></span>
+      Live Market Data · AI-Powered · Paper Trading · Free to Start
     </div>
-    <h1 class="text-5xl md:text-6xl font-black mb-5 leading-tight">
-      Your <span class="gradient-text">intelligent</span><br/>market companion
+    <h1 class="text-4xl md:text-6xl font-black mb-5 leading-tight" style="max-width:800px">
+      The smartest way to<br/><span class="grad-text">invest in India</span>
     </h1>
-    <p class="text-slate-400 text-lg max-w-lg mb-8">
-      Stop switching between 4 apps. Get NIFTY, SENSEX, stock analysis, and an AI that explains it all — in one place.
+    <p style="color:var(--text2);max-width:520px;line-height:1.7;margin-bottom:32px;font-size:1.05rem">
+      Stop switching between 4 apps. Get live NIFTY/SENSEX data, AI-explained news in Hinglish, paper trading, smart alerts, and a personal AI advisor — all in one place.
     </p>
-    <div class="flex gap-3 flex-wrap justify-center">
-      <button onclick="showApp()" class="px-6 py-3 rounded-xl btn-primary text-sm transition">Start for free</button>
-      <button onclick="showApp()" class="px-6 py-3 rounded-xl glass text-sm hover:bg-white/5 transition">Try as guest</button>
+    <div class="flex gap-3 flex-wrap justify-center mb-16">
+      <button onclick="showPage('pg-signup')" class="btn btn-primary" style="padding:14px 28px;font-size:1rem">Start investing for free</button>
+      <button onclick="guestLogin()" class="btn btn-ghost" style="padding:14px 28px;font-size:1rem">Try as guest →</button>
     </div>
 
-    <!-- Feature pills -->
-    <div class="flex flex-wrap gap-3 justify-center mt-12">
-      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">NIFTY &amp; SENSEX live</span>
-      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">AI stock analysis</span>
-      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Paper trading simulator</span>
-      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Portfolio tracker</span>
-      <span class="px-3 py-1 glass rounded-full text-xs text-slate-400">Trade history</span>
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl">
+      <div class="stat-card"><div class="text-2xl font-black grad-text">₹1L+</div><div class="text-xs mt-1" style="color:var(--text2)">Virtual cash to practice</div></div>
+      <div class="stat-card"><div class="text-2xl font-black grad-text">50+</div><div class="text-xs mt-1" style="color:var(--text2)">Quiz questions</div></div>
+      <div class="stat-card"><div class="text-2xl font-black grad-text">Live</div><div class="text-xs mt-1" style="color:var(--text2)">NSE/BSE data</div></div>
+      <div class="stat-card"><div class="text-2xl font-black grad-text">AI</div><div class="text-xs mt-1" style="color:var(--text2)">Hinglish advisor</div></div>
     </div>
+  </section>
 
-    <!-- Pricing preview -->
-    <div class="mt-16 grid md:grid-cols-2 gap-4 max-w-xl w-full">
-      <div class="glass rounded-2xl p-5 text-left">
-        <div class="text-xs text-slate-400 mb-1">Free</div>
-        <div class="text-2xl font-black mb-2">₹0 <span class="text-sm font-normal text-slate-400">/mo</span></div>
-        <ul class="text-xs text-slate-400 space-y-1">
-          <li>✓ Market dashboard</li>
-          <li>✓ 10 AI queries/day</li>
-          <li>✓ Basic trading sim</li>
-        </ul>
+  <!-- Market data section -->
+  <section id="horoscope" class="px-6 py-16 max-w-6xl mx-auto w-full">
+    <div class="section-label">Live Markets</div>
+    <h2 class="text-2xl font-bold mb-8">Today's market snapshot</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="land-mkt-cards">
+      <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-3 rounded mb-2 w-16" style="background:var(--inp-bg)"></div><div class="h-6 rounded" style="background:var(--inp-bg)"></div></div>
+      <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-3 rounded mb-2 w-16" style="background:var(--inp-bg)"></div><div class="h-6 rounded" style="background:var(--inp-bg)"></div></div>
+      <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-3 rounded mb-2 w-16" style="background:var(--inp-bg)"></div><div class="h-6 rounded" style="background:var(--inp-bg)"></div></div>
+      <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-3 rounded mb-2 w-16" style="background:var(--inp-bg)"></div><div class="h-6 rounded" style="background:var(--inp-bg)"></div></div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="land-stocks"></div>
+  </section>
+
+  <!-- Features section -->
+  <section id="features" class="px-6 py-16" style="background:var(--bg2)">
+    <div class="max-w-5xl mx-auto">
+      <div class="section-label text-center">Features</div>
+      <h2 class="text-2xl font-bold text-center mb-2">Everything you need, nothing you don't</h2>
+      <p class="text-center mb-10 text-sm" style="color:var(--text2)">Built for India's retail investors — beginners and experienced alike</p>
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="card p-6"><div class="text-2xl mb-3">📊</div><h3 class="font-bold mb-2">Live Market Data</h3><p class="text-sm" style="color:var(--text2)">Real-time NIFTY, SENSEX, and 12+ top stocks with instant price updates every 30 seconds.</p></div>
+        <div class="card p-6"><div class="text-2xl mb-3">🤖</div><h3 class="font-bold mb-2">AI in Hinglish</h3><p class="text-sm" style="color:var(--text2)">India's first stock market AI that speaks your language. Ask about any stock, market trend, or your portfolio in Hinglish.</p></div>
+        <div class="card p-6"><div class="text-2xl mb-3">📰</div><h3 class="font-bold mb-2">News Explained</h3><p class="text-sm" style="color:var(--text2)">Click any market news headline and get a plain-language explanation of what it means for your investments.</p></div>
+        <div class="card p-6"><div class="text-2xl mb-3">🔔</div><h3 class="font-bold mb-2">Smart Price Alerts</h3><p class="text-sm" style="color:var(--text2)">Set target prices for any stock. Get instantly notified when they cross your threshold — above or below.</p></div>
+        <div class="card p-6"><div class="text-2xl mb-3">💼</div><h3 class="font-bold mb-2">Paper Trading</h3><p class="text-sm" style="color:var(--text2)">Practice buying and selling with ₹1,00,000 virtual cash. No real money, real market prices. Build confidence before investing.</p></div>
+        <div class="card p-6"><div class="text-2xl mb-3">🎮</div><h3 class="font-bold mb-2">Learn & Earn XP</h3><p class="text-sm" style="color:var(--text2)">Quiz challenges on technical analysis, fundamentals, and market scenarios. Earn XP, level up, become a better investor.</p></div>
       </div>
-      <div class="rounded-2xl p-5 text-left" style="background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(129,140,248,0.15)); border: 1px solid rgba(56,189,248,0.3);">
-        <div class="text-xs text-sky-400 mb-1">Pro</div>
-        <div class="text-2xl font-black mb-2">₹299 <span class="text-sm font-normal text-slate-400">/mo</span></div>
-        <ul class="text-xs text-slate-400 space-y-1">
-          <li>✓ Unlimited AI analysis</li>
-          <li>✓ Full trading history</li>
-          <li>✓ Portfolio analytics</li>
-        </ul>
-        <button class="mt-3 w-full py-2 rounded-lg btn-primary text-xs" onclick="showApp()">Upgrade to Pro</button>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="px-6 py-16 max-w-5xl mx-auto w-full">
+    <div class="section-label text-center">How it works</div>
+    <h2 class="text-2xl font-bold text-center mb-10">From zero to informed investor in minutes</h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="text-center p-5"><div class="w-10 h-10 rounded-full grad-bg flex items-center justify-center text-white font-black mx-auto mb-3 text-sm">1</div><h4 class="font-semibold mb-1">Sign up free</h4><p class="text-xs" style="color:var(--text2)">Create your account in 30 seconds. No credit card needed.</p></div>
+      <div class="text-center p-5"><div class="w-10 h-10 rounded-full grad-bg flex items-center justify-center text-white font-black mx-auto mb-3 text-sm">2</div><h4 class="font-semibold mb-1">Explore markets</h4><p class="text-xs" style="color:var(--text2)">See live NIFTY, SENSEX, and top stocks at a glance.</p></div>
+      <div class="text-center p-5"><div class="w-10 h-10 rounded-full grad-bg flex items-center justify-center text-white font-black mx-auto mb-3 text-sm">3</div><h4 class="font-semibold mb-1">Ask the AI</h4><p class="text-xs" style="color:var(--text2)">Chat with StockSense AI about any stock in plain Hinglish.</p></div>
+      <div class="text-center p-5"><div class="w-10 h-10 rounded-full grad-bg flex items-center justify-center text-white font-black mx-auto mb-3 text-sm">4</div><h4 class="font-semibold mb-1">Practice & learn</h4><p class="text-xs" style="color:var(--text2)">Trade virtually, take quizzes, earn XP. Invest with confidence.</p></div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="px-6 py-16" style="background:var(--bg2)">
+    <div class="max-w-3xl mx-auto">
+      <div class="section-label text-center">Pricing</div>
+      <h2 class="text-2xl font-bold text-center mb-10">Simple, transparent pricing</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="card p-6">
+          <div class="text-xs font-semibold mb-1" style="color:var(--text2)">FREE FOREVER</div>
+          <div class="text-3xl font-black mb-1">₹0</div>
+          <div class="text-sm mb-5" style="color:var(--text2)">No credit card required</div>
+          <ul class="space-y-2 text-sm mb-6">
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Live market dashboard</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> AI news (10/day)</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> 3 price alerts</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Paper trading simulator</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Learning game + quizzes</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> AI chat (20 msgs/day)</li>
+          </ul>
+          <button onclick="showPage('pg-signup')" class="btn btn-ghost w-full">Start free</button>
+        </div>
+        <div class="p-6" style="border-radius:16px;background:linear-gradient(145deg,rgba(59,158,255,.12),rgba(129,140,248,.12));border:1px solid rgba(59,158,255,.35)">
+          <div class="text-xs font-semibold mb-1" style="color:var(--blue)">PRO</div>
+          <div class="text-3xl font-black mb-1">₹299<span class="text-base font-normal" style="color:var(--text2)">/mo</span></div>
+          <div class="text-sm mb-5" style="color:var(--text2)">Cancel anytime</div>
+          <ul class="space-y-2 text-sm mb-6">
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Everything in Free</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Unlimited AI chat & news</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Unlimited price alerts</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Advanced portfolio analytics</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> All game challenges</li>
+            <li class="flex items-center gap-2"><span style="color:var(--green)">✓</span> Priority AI responses</li>
+          </ul>
+          <button onclick="showPage('pg-signup')" class="btn btn-primary w-full">Upgrade to Pro</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="px-6 py-16 max-w-3xl mx-auto w-full">
+    <div class="section-label text-center">FAQ</div>
+    <h2 class="text-2xl font-bold text-center mb-8">Frequently asked questions</h2>
+    <div class="space-y-3" id="faq-list"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="px-6 py-10" style="background:var(--bg2);border-top:1px solid var(--border)">
+    <div class="max-w-5xl mx-auto grid md:grid-cols-4 gap-8 mb-8">
+      <div><div class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded grad-bg flex items-center justify-center text-white text-xs font-black">S</div><span class="font-bold">StockSense AI</span></div><p class="text-xs" style="color:var(--text2)">India's smartest investing companion. Learn, practice, and grow.</p></div>
+      <div><div class="text-xs font-semibold mb-3" style="color:var(--text2)">PRODUCT</div><div class="space-y-2 text-sm"><div class="cursor-pointer hover:text-blue-400 transition" onclick="showPage('pg-signup')">Dashboard</div><div class="cursor-pointer hover:text-blue-400 transition" onclick="showPage('pg-signup')">AI Chat</div><div class="cursor-pointer hover:text-blue-400 transition" onclick="showPage('pg-signup')">Paper Trading</div></div></div>
+      <div><div class="text-xs font-semibold mb-3" style="color:var(--text2)">COMPANY</div><div class="space-y-2 text-sm"><div style="color:var(--text2)">About Us</div><div style="color:var(--text2)">Blog</div><div style="color:var(--text2)">Contact</div></div></div>
+      <div><div class="text-xs font-semibold mb-3" style="color:var(--text2)">LEGAL</div><div class="space-y-2 text-sm"><div style="color:var(--text2)">Privacy Policy</div><div style="color:var(--text2)">Terms of Use</div><div style="color:var(--text2)">Disclaimer</div></div></div>
+    </div>
+    <div class="text-center text-xs" style="color:var(--text3)">© 2025 StockSense AI. For educational purposes only. Not SEBI-registered investment advice.</div>
+  </footer>
+</div>
+
+<!-- ═══ LOGIN ══════════════════════════════════════════════════════════════════ -->
+<div id="pg-login" class="page">
+  <div class="auth-split">
+    <div class="auth-left">
+      <button onclick="showPage('pg-land')" class="text-sm mb-8" style="color:rgba(255,255,255,.5)">← Back</button>
+      <div class="flex items-center gap-2 mb-8"><div class="w-9 h-9 rounded-xl grad-bg flex items-center justify-center text-white font-black">S</div><span class="text-white font-bold text-lg">StockSense AI</span></div>
+      <h2 class="text-3xl font-black text-white mb-3">Welcome back</h2>
+      <p style="color:rgba(255,255,255,.6);margin-bottom:32px;line-height:1.6">Log in to access your personalized dashboard, AI advisor, and live market data.</p>
+      <div class="space-y-4">
+        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,.1)">📊</div><div style="color:rgba(255,255,255,.8);font-size:.875rem">Live NIFTY & SENSEX tracking</div></div>
+        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,.1)">🤖</div><div style="color:rgba(255,255,255,.8);font-size:.875rem">AI market advisor in Hinglish</div></div>
+        <div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,.1)">💼</div><div style="color:rgba(255,255,255,.8);font-size:.875rem">Paper trading with ₹1,00,000</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div style="max-width:360px;margin:0 auto;width:100%">
+        <h3 class="text-2xl font-bold mb-1">Log in</h3>
+        <p class="text-sm mb-6" style="color:var(--text2)">Don't have an account? <button onclick="showPage('pg-signup')" class="font-semibold" style="color:var(--blue)">Sign up free</button></p>
+        <div class="space-y-4">
+          <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">USERNAME</label><input id="li-u" class="inp" placeholder="Enter your username" type="text"/></div>
+          <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">PASSWORD</label><input id="li-p" class="inp" placeholder="Enter your password" type="password"/></div>
+          <div id="li-err" class="hidden text-xs text-center py-2 px-3 rounded-lg" style="background:rgba(248,113,113,.1);color:var(--red)"></div>
+          <button onclick="doLogin()" class="btn btn-primary w-full" style="padding:13px">Log in to dashboard</button>
+          <button onclick="guestLogin()" class="btn btn-ghost w-full text-sm" style="padding:11px">Continue as guest (no signup needed)</button>
+        </div>
+        <p class="text-xs text-center mt-5" style="color:var(--text3)">By logging in, you agree to our <span style="color:var(--blue);cursor:pointer">Terms of Use</span> and <span style="color:var(--blue);cursor:pointer">Privacy Policy</span></p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- App Dashboard -->
-<div id="app" class="hidden min-h-screen flex flex-col">
-
-  <!-- Top ticker -->
-  <div class="bg-black/30 border-b border-white/5 py-2 overflow-hidden">
-    <div class="ticker-bar flex gap-8 text-xs whitespace-nowrap" id="ticker">
-      <span class="text-slate-500">Loading market data...</span>
+<!-- ═══ SIGNUP ═════════════════════════════════════════════════════════════════ -->
+<div id="pg-signup" class="page">
+  <div class="auth-split">
+    <div class="auth-left">
+      <button onclick="showPage('pg-land')" class="text-sm mb-8" style="color:rgba(255,255,255,.5)">← Back</button>
+      <div class="flex items-center gap-2 mb-8"><div class="w-9 h-9 rounded-xl grad-bg flex items-center justify-center text-white font-black">S</div><span class="text-white font-bold text-lg">StockSense AI</span></div>
+      <h2 class="text-3xl font-black text-white mb-3">Start your journey</h2>
+      <p style="color:rgba(255,255,255,.6);margin-bottom:32px;line-height:1.6">Join thousands of Indian investors using AI to make smarter decisions. Free forever.</p>
+      <div class="card-sm p-4" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)">
+        <div class="text-white font-semibold text-sm mb-2">🎁 What you get for free</div>
+        <ul class="space-y-1.5 text-sm" style="color:rgba(255,255,255,.7)">
+          <li>✓ ₹1,00,000 virtual cash to practice trading</li>
+          <li>✓ AI market advisor in Hinglish</li>
+          <li>✓ Live NIFTY, SENSEX, 12+ stocks</li>
+          <li>✓ News explained in simple language</li>
+          <li>✓ Investing quizzes + XP rewards</li>
+        </ul>
+      </div>
     </div>
+    <div class="auth-right">
+      <div style="max-width:360px;margin:0 auto;width:100%">
+        <h3 class="text-2xl font-bold mb-1">Create account</h3>
+        <p class="text-sm mb-6" style="color:var(--text2)">Already have one? <button onclick="showPage('pg-login')" class="font-semibold" style="color:var(--blue)">Log in</button></p>
+        <div class="space-y-4">
+          <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">USERNAME</label><input id="su-u" class="inp" placeholder="Choose a username" type="text"/></div>
+          <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">EMAIL <span style="color:var(--text3)">(optional)</span></label><input id="su-e" class="inp" placeholder="you@email.com" type="email"/></div>
+          <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">PASSWORD</label><input id="su-p" class="inp" placeholder="Min 6 characters" type="password"/></div>
+          <div id="su-err" class="hidden text-xs text-center py-2 px-3 rounded-lg" style="background:rgba(248,113,113,.1);color:var(--red)"></div>
+          <button onclick="doSignup()" class="btn btn-primary w-full" style="padding:13px">Create free account</button>
+          <button onclick="guestLogin()" class="btn btn-ghost w-full text-sm" style="padding:11px">Try as guest instead</button>
+        </div>
+        <p class="text-xs text-center mt-5" style="color:var(--text3)">By signing up, you agree to our <span style="color:var(--blue);cursor:pointer">Terms of Use</span> and <span style="color:var(--blue);cursor:pointer">Privacy Policy</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ════════════════════════════════════════════════════════════════════ -->
+<div id="pg-app" class="page">
+
+  <!-- Alert banner -->
+  <div id="alert-banner" class="hidden text-xs text-center py-2 font-semibold" style="background:linear-gradient(90deg,rgba(52,211,153,.15),rgba(59,158,255,.15));border-bottom:1px solid rgba(52,211,153,.3)"><span id="alert-txt"></span></div>
+
+  <!-- Market ticker -->
+  <div class="ticker-wrap py-2" style="background:rgba(59,158,255,.05);border-bottom:1px solid var(--border)">
+    <div class="ticker-inner text-xs" id="app-ticker"><span style="color:var(--text3)">Loading...</span></div>
   </div>
 
   <!-- Navbar -->
-  <nav class="flex items-center justify-between px-6 py-3 border-b border-white/5 glass sticky top-0 z-10">
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg btn-primary flex items-center justify-center text-xs font-black">S</div>
-      <span class="font-bold">StockSense <span class="gradient-text">AI</span></span>
+  <nav class="sticky top-0 z-30 px-4 py-3 flex items-center justify-between gap-3" style="background:var(--bg2);border-bottom:1px solid var(--border)">
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="w-7 h-7 rounded-lg grad-bg flex items-center justify-center text-white text-xs font-black">S</div>
+      <span class="font-bold hidden sm:block">StockSense <span class="grad-text">AI</span></span>
     </div>
-    <div class="flex gap-1">
-      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab px-4 py-2 rounded-lg text-sm transition tab-active">Dashboard</button>
-      <button onclick="switchTab('trade')" id="tab-trade" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">Trade</button>
-      <button onclick="switchTab('portfolio')" id="tab-portfolio" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">Portfolio</button>
-      <button onclick="switchTab('ai')" id="tab-ai" class="tab px-4 py-2 rounded-lg text-sm transition text-slate-400 hover:text-white">AI Chat</button>
+    <div class="flex gap-1 flex-wrap justify-center">
+      <button onclick="sw('dashboard')" id="t-dashboard" class="tab btn text-xs py-1.5 px-3 tab-a">Dashboard</button>
+      <button onclick="sw('news')" id="t-news" class="tab btn text-xs py-1.5 px-3 tab-i">News AI</button>
+      <button onclick="sw('alerts')" id="t-alerts" class="tab btn text-xs py-1.5 px-3 tab-i">Alerts</button>
+      <button onclick="sw('trade')" id="t-trade" class="tab btn text-xs py-1.5 px-3 tab-i">Trade</button>
+      <button onclick="sw('game')" id="t-game" class="tab btn text-xs py-1.5 px-3 tab-i" style="background:rgba(251,191,36,.1);color:var(--amber)">Game</button>
+      <button onclick="sw('workspace')" id="t-workspace" class="tab btn text-xs py-1.5 px-3 tab-i">Workspace</button>
+      <button onclick="sw('portfolio')" id="t-portfolio" class="tab btn text-xs py-1.5 px-3 tab-i">Portfolio</button>
     </div>
-    <button onclick="goBack()" class="text-xs text-slate-500 hover:text-white transition">← Back</button>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="toggle-pill" id="app-theme-toggle" onclick="toggleTheme()"><div class="toggle-knob"></div></div>
+      <div class="text-right hidden sm:block">
+        <div class="text-xs font-semibold" id="nav-user">--</div>
+        <div class="text-xs" style="color:var(--text2)">Lv.<span id="nav-lv">1</span> · <span id="nav-xp">0</span>XP</div>
+      </div>
+      <button onclick="doLogout()" class="btn btn-ghost text-xs py-1.5 px-3">Exit</button>
+    </div>
   </nav>
 
-  <div class="flex-1 p-6 max-w-7xl mx-auto w-full">
+  <div class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
 
-    <!-- Dashboard Section -->
-    <div id="sec-dashboard" class="section active">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="market-cards">
-        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
-        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
-        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
-        <div class="glass rounded-xl p-4 animate-pulse"><div class="h-4 bg-white/5 rounded mb-2"></div><div class="h-6 bg-white/5 rounded"></div></div>
-      </div>
+    <!-- ── DASHBOARD ── -->
+    <div id="s-dashboard" class="sec on fade-in">
+      <!-- Market overview cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" id="mkt-cards"></div>
 
-      <div class="grid md:grid-cols-2 gap-6">
+      <div class="grid md:grid-cols-5 gap-5 mb-5">
         <!-- Chart -->
-        <div class="glass rounded-2xl p-5">
+        <div class="card p-5 md:col-span-3">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold">Market Overview</h3>
-            <span class="text-xs text-slate-400">Live prices</span>
+            <div><div class="font-semibold">Market Overview</div><div class="text-xs" style="color:var(--text2)">Top stocks by price</div></div>
+            <span class="badge badge-green">Live</span>
           </div>
-          <canvas id="marketChart" height="200"></canvas>
+          <canvas id="mkt-chart" height="180"></canvas>
         </div>
-
-        <!-- Quick AI -->
-        <div class="glass rounded-2xl p-5">
-          <h3 class="font-semibold mb-4">Quick AI Insights</h3>
-          <div class="space-y-2" id="quick-insights">
-            <div class="p-3 rounded-lg bg-white/5 text-xs text-slate-400">Ask AI about any stock or market trend...</div>
+        <!-- Quick AI ask -->
+        <div class="card p-5 md:col-span-2">
+          <div class="font-semibold mb-1">Quick AI Ask</div>
+          <div class="text-xs mb-3" style="color:var(--text2)">Ask anything — AI answers in Hinglish</div>
+          <div id="qi-out" class="text-xs leading-relaxed mb-3 p-3 rounded-xl min-h-20" style="background:var(--inp-bg);color:var(--text2)">Ask about any stock, market trend, or investing concept...</div>
+          <div class="flex gap-2">
+            <input id="qi-inp" class="inp flex-1 text-xs py-2" placeholder="e.g. Why is NIFTY down today?"/>
+            <button onclick="quickAsk()" class="btn btn-primary text-xs py-2 px-3">Ask</button>
           </div>
-          <div class="mt-3 flex gap-2">
-            <input id="quick-input" type="text" placeholder="e.g. Why is NIFTY falling?" class="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
-            <button onclick="quickAsk()" class="px-4 py-2 rounded-lg btn-primary text-xs">Ask</button>
+          <div class="flex flex-wrap gap-1 mt-2">
+            <button onclick="qi('NIFTY outlook?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2)">NIFTY outlook</button>
+            <button onclick="qi('Best SIP stocks?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2)">Best SIP stocks</button>
+            <button onclick="qi('What is P/E ratio?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2)">P/E ratio?</button>
           </div>
         </div>
       </div>
 
       <!-- Stock grid -->
-      <div class="mt-6">
-        <h3 class="font-semibold mb-3">Stocks</h3>
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-3"><h3 class="font-semibold">All Stocks</h3><span class="text-xs" style="color:var(--text2)">Click to ask AI</span></div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="stock-grid"></div>
       </div>
-    </div>
 
-    <!-- Trade Section -->
-    <div id="sec-trade" class="section">
-      <div class="max-w-lg mx-auto">
-        <div class="glass rounded-2xl p-6">
-          <h2 class="font-bold text-lg mb-1">Trading Simulator</h2>
-          <p class="text-xs text-slate-400 mb-5">Practice with ₹1,00,000 virtual cash. No real money involved.</p>
-
-          <div class="mb-4">
-            <label class="text-xs text-slate-400 mb-1 block">Stock Symbol</label>
-            <select id="trade-symbol" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
-              <option value="RELIANCE">RELIANCE</option>
-              <option value="TCS">TCS</option>
-              <option value="INFY">INFY</option>
-              <option value="HDFC">HDFC Bank</option>
-              <option value="ICICI">ICICI Bank</option>
-              <option value="WIPRO">WIPRO</option>
-              <option value="BAJAJ">Bajaj Finance</option>
-              <option value="MARUTI">Maruti Suzuki</option>
-              <option value="TATAMOTORS">Tata Motors</option>
-            </select>
+      <!-- Indices section -->
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="card p-4"><div class="text-xs font-semibold mb-3" style="color:var(--text2)">MARKET INSTRUMENTS</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span>Stocks (NSE/BSE)</span><span class="badge badge-green">Live</span></div>
+            <div class="flex justify-between"><span>Mutual Funds</span><span class="badge badge-blue">Via AI</span></div>
+            <div class="flex justify-between"><span>ETFs</span><span class="badge badge-blue">Coming</span></div>
+            <div class="flex justify-between"><span>IPOs</span><span class="badge badge-blue">Coming</span></div>
+            <div class="flex justify-between"><span>F&O</span><span class="badge badge-blue">Via AI</span></div>
           </div>
-
-          <div class="mb-4">
-            <label class="text-xs text-slate-400 mb-1 block">Current Price</label>
-            <div id="trade-price" class="text-2xl font-black gradient-text">Loading...</div>
-          </div>
-
-          <div class="mb-4">
-            <label class="text-xs text-slate-400 mb-1 block">Amount (₹)</label>
-            <input id="trade-amount" type="number" placeholder="e.g. 10000" class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
-          </div>
-
-          <div id="trade-preview" class="mb-4 p-3 rounded-lg bg-white/5 text-xs text-slate-400 hidden"></div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <button onclick="executeTrade('buy')" class="py-3 rounded-xl btn-primary text-sm font-bold">Buy</button>
-            <button onclick="executeTrade('sell')" class="py-3 rounded-xl glass border border-red-400/30 text-red-400 text-sm font-bold hover:bg-red-400/10 transition">Sell</button>
-          </div>
-
-          <div id="trade-result" class="mt-4 p-3 rounded-lg text-sm text-center hidden"></div>
         </div>
-
-        <!-- Trade History -->
-        <div class="glass rounded-2xl p-5 mt-4">
-          <h3 class="font-semibold mb-3">Recent Trades</h3>
-          <div id="trade-history" class="space-y-2 text-xs text-slate-400">Loading...</div>
+        <div class="card p-4"><div class="text-xs font-semibold mb-3" style="color:var(--text2)">YOUR QUICK ACTIONS</div>
+          <div class="space-y-2">
+            <button onclick="sw('trade')" class="w-full text-left text-sm py-2 px-3 rounded-lg" style="background:var(--inp-bg)">💼 Go to Paper Trading</button>
+            <button onclick="sw('alerts')" class="w-full text-left text-sm py-2 px-3 rounded-lg" style="background:var(--inp-bg)">🔔 Set Price Alert</button>
+            <button onclick="sw('game')" class="w-full text-left text-sm py-2 px-3 rounded-lg" style="background:var(--inp-bg)">🎮 Play Quiz Game</button>
+            <button onclick="document.getElementById('fab').click()" class="w-full text-left text-sm py-2 px-3 rounded-lg" style="background:var(--inp-bg)">🤖 Chat with AI</button>
+          </div>
+        </div>
+        <div class="card p-4"><div class="text-xs font-semibold mb-3" style="color:var(--text2)">YOUR PROGRESS</div>
+          <div class="mb-3">
+            <div class="flex justify-between text-xs mb-1"><span>Level <span id="d-lv">1</span></span><span><span id="d-xp">0</span> / <span id="d-xp-next">100</span> XP</span></div>
+            <div class="xp-bar-track"><div class="xp-bar-fill" id="d-xpbar" style="width:0%"></div></div>
+          </div>
+          <div class="text-xs" style="color:var(--text2)">Earn XP by trading, completing quizzes, and setting alerts.</div>
         </div>
       </div>
     </div>
 
-    <!-- Portfolio Section -->
-    <div id="sec-portfolio" class="section">
-      <div class="grid md:grid-cols-3 gap-4 mb-6" id="portfolio-summary">
-        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Available Cash</div><div id="p-cash" class="text-xl font-black">--</div></div>
-        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Portfolio Value</div><div id="p-value" class="text-xl font-black">--</div></div>
-        <div class="glass rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Total P&amp;L</div><div id="p-pnl" class="text-xl font-black">--</div></div>
-      </div>
-      <div class="glass rounded-2xl p-5">
-        <h3 class="font-semibold mb-4">Holdings</h3>
-        <div id="holdings-table" class="space-y-3 text-sm">Loading...</div>
-      </div>
-    </div>
-
-    <!-- AI Chat Section -->
-    <div id="sec-ai" class="section">
+    <!-- ── NEWS AI ── -->
+    <div id="s-news" class="sec fade-in">
       <div class="max-w-2xl mx-auto">
-        <div class="glass rounded-2xl overflow-hidden">
-          <div class="p-4 border-b border-white/5 flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full btn-primary flex items-center justify-center text-xs font-black">AI</div>
-            <div>
-              <div class="text-sm font-semibold">StockSense AI</div>
-              <div class="text-xs text-emerald-400">Online · Market-aware</div>
-            </div>
+        <div class="mb-5"><h2 class="text-xl font-bold">News <span class="grad-text">AI</span></h2><p class="text-sm mt-1" style="color:var(--text2)">Click any headline — AI explains it in plain Hinglish and tells you which stocks are affected.</p></div>
+        <div id="news-list" class="space-y-3 mb-5">
+          <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-4 rounded mb-2 w-3/4" style="background:var(--inp-bg)"></div><div class="h-3 rounded w-1/2" style="background:var(--inp-bg)"></div></div>
+          <div class="card p-4" style="animation:pulse 2s infinite"><div class="h-4 rounded mb-2 w-2/3" style="background:var(--inp-bg)"></div><div class="h-3 rounded w-1/3" style="background:var(--inp-bg)"></div></div>
+        </div>
+        <div id="news-panel" class="hidden card p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-6 h-6 rounded-full grad-bg flex items-center justify-center text-white text-xs font-black">AI</div>
+            <span class="text-xs font-semibold" style="color:var(--blue)">StockSense AI explains</span>
           </div>
+          <div id="news-hl" class="text-sm font-semibold mb-3" style="color:var(--text)"></div>
+          <div id="news-exp" class="text-sm leading-relaxed" style="border-left:2px solid var(--blue);padding-left:12px;color:var(--text)"></div>
+        </div>
+      </div>
+    </div>
 
-          <div id="chat-messages" class="h-96 overflow-y-auto p-4 space-y-4">
-            <div class="chat-msg flex gap-3">
-              <div class="w-7 h-7 rounded-full btn-primary flex items-center justify-center text-xs font-black flex-shrink-0">AI</div>
-              <div class="glass rounded-2xl rounded-tl-sm px-4 py-3 text-sm max-w-xs">
-                Namaste! Main StockSense AI hoon. Aaj market ke baare mein kuch poochhna hai? NIFTY, SENSEX, ya koi specific stock — sab kuch batao!
+    <!-- ── ALERTS ── -->
+    <div id="s-alerts" class="sec fade-in">
+      <div class="max-w-lg mx-auto">
+        <h2 class="text-xl font-bold mb-1">Price Alerts</h2>
+        <p class="text-sm mb-5" style="color:var(--text2)">Set target prices and get notified instantly when stocks cross your threshold.</p>
+
+        <div class="card p-5 mb-4">
+          <h3 class="font-semibold text-sm mb-4">Add New Alert</h3>
+          <div class="grid grid-cols-3 gap-3 mb-3">
+            <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">STOCK</label>
+              <select id="w-sym" class="inp text-xs py-2"><option>RELIANCE</option><option>TCS</option><option>INFY</option><option>HDFC</option><option>ICICI</option><option>WIPRO</option><option>BAJAJ</option><option>MARUTI</option><option>TATAMOTORS</option></select></div>
+            <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">TARGET ₹</label>
+              <input id="w-price" type="number" class="inp text-xs py-2" placeholder="e.g. 3000"/></div>
+            <div><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">CONDITION</label>
+              <select id="w-type" class="inp text-xs py-2"><option value="above">Crosses above</option><option value="below">Falls below</option></select></div>
+          </div>
+          <button onclick="addWatch()" class="btn btn-primary w-full text-sm">Set Alert</button>
+          <div id="w-res" class="hidden mt-2 text-xs text-center py-2 px-3 rounded-lg"></div>
+        </div>
+
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-sm">Active Alerts</h3>
+            <button onclick="loadWatchlist()" class="text-xs" style="color:var(--blue)">Refresh</button>
+          </div>
+          <div id="w-list"><div class="text-xs text-center py-6" style="color:var(--text3)">No alerts set yet. Add one above.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TRADE ── -->
+    <div id="s-trade" class="sec fade-in">
+      <div class="max-w-2xl mx-auto">
+        <div class="mb-5">
+          <h2 class="text-xl font-bold">Paper Trading Simulator</h2>
+          <p class="text-sm mt-1" style="color:var(--text2)">Practice with ₹1,00,000 virtual cash at real market prices. Earn XP for every trade.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5 mb-5">
+          <!-- Buy/Sell panel -->
+          <div class="card p-5">
+            <h3 class="font-semibold text-sm mb-4">Execute Trade</h3>
+            <div class="mb-3"><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">SELECT STOCK</label>
+              <select id="tr-sym" class="inp" onchange="updateTradePrice()">
+                <option value="RELIANCE">RELIANCE — Reliance Industries</option>
+                <option value="TCS">TCS — Tata Consultancy</option>
+                <option value="INFY">INFY — Infosys</option>
+                <option value="HDFC">HDFC — HDFC Bank</option>
+                <option value="ICICI">ICICI — ICICI Bank</option>
+                <option value="WIPRO">WIPRO — Wipro</option>
+                <option value="BAJAJ">BAJAJ — Bajaj Finance</option>
+                <option value="MARUTI">MARUTI — Maruti Suzuki</option>
+                <option value="TATAMOTORS">TATAMOTORS — Tata Motors</option>
+              </select></div>
+            <div class="card-sm p-3 mb-3 flex justify-between items-center">
+              <div><div class="text-xs" style="color:var(--text2)">Current Price</div><div class="text-xl font-black grad-text" id="tr-price">--</div></div>
+              <div class="text-right"><div class="text-xs" style="color:var(--text2)">Available Cash</div><div class="text-sm font-bold" id="tr-cash">₹1,00,000</div></div>
+            </div>
+            <div class="mb-3"><label class="text-xs font-semibold mb-1.5 block" style="color:var(--text2)">AMOUNT (₹)</label>
+              <input id="tr-amt" type="number" class="inp" placeholder="e.g. 10000" oninput="tradePreview()"/></div>
+            <div id="tr-prev" class="hidden text-xs p-3 rounded-xl mb-3" style="background:var(--inp-bg);color:var(--text2)"></div>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="doTrade('buy')" class="btn btn-primary">Buy</button>
+              <button onclick="doTrade('sell')" class="btn btn-danger">Sell</button>
+            </div>
+            <div id="tr-res" class="hidden mt-3 text-sm text-center py-2 px-3 rounded-xl"></div>
+          </div>
+          <!-- XP & info panel -->
+          <div class="space-y-4">
+            <div class="card-sm p-4">
+              <div class="text-xs font-semibold mb-3" style="color:var(--text2)">HOW XP WORKS</div>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between"><span>Buy any stock</span><span class="badge badge-blue">+5 XP</span></div>
+                <div class="flex justify-between"><span>Sell any stock</span><span class="badge badge-blue">+3 XP</span></div>
+                <div class="flex justify-between"><span>Profitable trade</span><span class="badge badge-green">+10 XP bonus</span></div>
+                <div class="flex justify-between"><span>Complete a quiz</span><span class="badge badge-green">+10–20 XP</span></div>
               </div>
             </div>
-          </div>
-
-          <div class="p-4 border-t border-white/5 flex gap-2">
-            <input id="chat-input" type="text" placeholder="Ask about any stock, market trend, or trading strategy..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400"/>
-            <button onclick="sendChat()" class="px-4 py-3 rounded-xl btn-primary text-sm font-bold">Send</button>
+            <div class="card-sm p-4">
+              <div class="text-xs font-semibold mb-2" style="color:var(--text2)">TRADING TIPS</div>
+              <ul class="space-y-1.5 text-xs" style="color:var(--text2)">
+                <li>• Diversify across sectors — don't put all cash in one stock</li>
+                <li>• Use the AI to analyse a stock before buying</li>
+                <li>• Set price alerts to track your positions</li>
+                <li>• Check fundamentals in the quiz section first</li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <!-- Suggested prompts -->
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button onclick="askSuggested('NIFTY aaj kaise hai?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">NIFTY aaj kaise hai?</button>
-          <button onclick="askSuggested('Mujhe RELIANCE kharidna chahiye?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">RELIANCE kharidna chahiye?</button>
-          <button onclick="askSuggested('Mera portfolio kaisa hai?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">Mera portfolio kaisa hai?</button>
-          <button onclick="askSuggested('Beginner ke liye best stocks kaunse hain?')" class="px-3 py-1 glass rounded-full text-xs text-slate-400 hover:text-white transition">Beginner stocks?</button>
+        <!-- Trade history -->
+        <div class="card p-5">
+          <h3 class="font-semibold text-sm mb-3">Recent Trades</h3>
+          <div id="tr-hist" class="space-y-2 text-xs" style="color:var(--text2)">Loading...</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── GAME ── -->
+    <div id="s-game" class="sec fade-in">
+      <div class="max-w-2xl mx-auto">
+        <!-- XP card -->
+        <div class="card p-4 mb-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl grad-bg flex items-center justify-center text-white text-lg font-black flex-shrink-0" id="g-level">1</div>
+          <div class="flex-1">
+            <div class="flex justify-between text-sm mb-1.5"><span class="font-semibold" id="g-uname">Player</span><span style="color:var(--text2)"><span id="g-xp">0</span> XP total</span></div>
+            <div class="xp-bar-track"><div class="xp-bar-fill" id="g-xpbar" style="width:0%"></div></div>
+            <div class="text-xs mt-1" style="color:var(--text2)"><span id="g-xp-left">100</span> XP to next level</div>
+          </div>
+          <div class="text-right"><div class="font-semibold text-sm" id="g-rank">Beginner</div><div class="text-xs" style="color:var(--text2)">rank</div></div>
+        </div>
+
+        <!-- Home -->
+        <div id="g-home">
+          <h2 class="text-xl font-bold mb-1">Learn & Earn XP</h2>
+          <p class="text-sm mb-5" style="color:var(--text2)">Master markets through quizzes and real-world challenges. Earn XP, level up.</p>
+          <div class="grid md:grid-cols-3 gap-4 mb-4">
+            <div class="game-card card p-5" onclick="startQuiz('basics')">
+              <div class="text-2xl mb-3">📚</div><div class="font-semibold mb-1">Stock Basics</div>
+              <div class="text-xs mb-3" style="color:var(--text2)">Markets, stocks, indices. Perfect for beginners.</div>
+              <div class="badge badge-blue">+10 XP per correct answer</div>
+            </div>
+            <div class="game-card card p-5" onclick="startQuiz('technical')">
+              <div class="text-2xl mb-3">📈</div><div class="font-semibold mb-1">Technical Analysis</div>
+              <div class="text-xs mb-3" style="color:var(--text2)">RSI, MACD, moving averages, candlestick patterns.</div>
+              <div class="badge badge-blue">+15 XP per correct answer</div>
+            </div>
+            <div class="game-card card p-5" onclick="startQuiz('fundamental')">
+              <div class="text-2xl mb-3">🔍</div><div class="font-semibold mb-1">Fundamental Analysis</div>
+              <div class="text-xs mb-3" style="color:var(--text2)">P/E, EPS, ROE, balance sheet reading.</div>
+              <div class="badge badge-blue">+20 XP per correct answer</div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="game-card card p-5" onclick="startChallenge('crash')">
+              <div class="text-2xl mb-2">🌪️</div><div class="font-semibold mb-1">Survive the Crash</div>
+              <div class="text-xs mb-3" style="color:var(--text2)">Market drops 20%. Pick 3 stocks most likely to hold up. Earn 50 XP.</div>
+              <div class="flex justify-between items-center"><div class="badge badge-green">+50 XP</div><span class="text-xs" style="color:var(--text3)">Hard</span></div>
+            </div>
+            <div class="game-card card p-5" onclick="startChallenge('bull')">
+              <div class="text-2xl mb-2">🐂</div><div class="font-semibold mb-1">Bull Run Maximizer</div>
+              <div class="text-xs mb-3" style="color:var(--text2)">Markets are surging. Pick 3 stocks to beat NIFTY. Earn 50 XP.</div>
+              <div class="flex justify-between items-center"><div class="badge badge-green">+50 XP</div><span class="text-xs" style="color:var(--text3)">Medium</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quiz UI -->
+        <div id="g-quiz" class="hidden">
+          <div class="flex justify-between items-center mb-4">
+            <button onclick="exitQuiz()" class="text-sm" style="color:var(--text2)">← Back</button>
+            <span class="text-xs" style="color:var(--text2)">Q<span id="q-num">1</span>/5 · <span id="q-xp-val">10</span> XP each</span>
+          </div>
+          <div class="card p-5 mb-4">
+            <div class="text-sm font-semibold mb-5 leading-relaxed" id="q-text"></div>
+            <div class="space-y-2" id="q-opts"></div>
+          </div>
+          <div id="q-fb" class="hidden card-sm p-4 text-sm mb-4 leading-relaxed"></div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs" style="color:var(--text2)">Score: <span id="q-score">0</span>/<span id="q-tot">0</span></span>
+            <button id="q-next-btn" onclick="nextQ()" class="hidden btn btn-primary text-xs py-2 px-4">Next →</button>
+          </div>
+        </div>
+
+        <!-- Challenge UI -->
+        <div id="g-ch" class="hidden">
+          <div class="flex justify-between items-center mb-4">
+            <button onclick="exitQuiz()" class="text-sm" style="color:var(--text2)">← Back</button>
+            <span class="font-semibold text-sm" id="ch-title" style="color:var(--amber)"></span>
+          </div>
+          <div class="card p-5 mb-4">
+            <div id="ch-scenario" class="text-sm leading-relaxed mb-4" style="color:var(--text)"></div>
+            <div class="grid grid-cols-3 gap-2 mb-4" id="ch-stocks"></div>
+            <div id="ch-result" class="hidden p-4 rounded-xl text-sm leading-relaxed mb-3"></div>
+            <button id="ch-submit-btn" onclick="submitCh()" class="btn btn-primary w-full">Submit my picks</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WORKSPACE ── -->
+    <div id="s-workspace" class="sec fade-in">
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-5"><h2 class="text-xl font-bold">Workspace</h2><p class="text-sm mt-1" style="color:var(--text2)">Your personal multi-agent workspace — tasks, notes, and calendar all connected to StockSense AI.</p></div>
+
+        <!-- Agent command bar -->
+        <div class="card p-4 mb-5">
+          <div class="text-xs font-semibold mb-2" style="color:var(--blue)">MASTER AGENT — Natural Language Commands</div>
+          <div class="flex gap-2">
+            <input id="ag-inp" class="inp flex-1 text-sm" placeholder='Try: "Add task: Review Q4 results" or "Show my portfolio" or "Schedule meeting tomorrow"'/>
+            <button onclick="sendAgent()" class="btn btn-primary text-sm px-4">Run</button>
+          </div>
+          <div id="ag-out" class="hidden mt-3 text-xs p-3 rounded-xl" style="background:var(--inp-bg)"></div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+          <!-- Tasks -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div><div class="font-semibold text-sm">Tasks</div><div class="text-xs" style="color:var(--text3)">Task Agent</div></div>
+              <span class="badge badge-blue">MCP Tool</span>
+            </div>
+            <div class="flex gap-2 mb-3">
+              <input id="task-inp" class="inp flex-1 text-xs py-2" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()"/>
+              <button onclick="addTask()" class="btn btn-primary text-xs py-2 px-3">+</button>
+            </div>
+            <div id="task-list" class="space-y-2 text-xs max-h-56 overflow-y-auto"></div>
+          </div>
+          <!-- Notes -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div><div class="font-semibold text-sm">Notes</div><div class="text-xs" style="color:var(--text3)">Notes Agent</div></div>
+              <span class="badge badge-blue">MCP Tool</span>
+            </div>
+            <textarea id="note-inp" class="inp w-full text-xs mb-2" rows="3" placeholder="Write a note about a stock, strategy, or idea..."></textarea>
+            <button onclick="addNote()" class="btn btn-primary w-full text-xs py-2 mb-3">Save Note</button>
+            <div id="note-list" class="space-y-2 text-xs max-h-44 overflow-y-auto"></div>
+          </div>
+          <!-- Calendar -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div><div class="font-semibold text-sm">Calendar</div><div class="text-xs" style="color:var(--text3)">Calendar Agent</div></div>
+              <span class="badge badge-blue">MCP Tool</span>
+            </div>
+            <input id="ev-title" class="inp text-xs mb-2" placeholder="Event title (e.g. Q4 results day)"/>
+            <input id="ev-date" class="inp text-xs mb-2" type="date"/>
+            <input id="ev-time" class="inp text-xs mb-2" type="time"/>
+            <button onclick="addEvent()" class="btn btn-primary w-full text-xs py-2 mb-3">Add Event</button>
+            <div id="ev-list" class="space-y-2 text-xs max-h-32 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PORTFOLIO ── -->
+    <div id="s-portfolio" class="sec fade-in">
+      <div class="mb-5"><h2 class="text-xl font-bold">Portfolio</h2><p class="text-sm mt-1" style="color:var(--text2)">Your paper trading positions and performance.</p></div>
+      <div class="grid grid-cols-3 gap-4 mb-5">
+        <div class="card p-4"><div class="text-xs font-semibold mb-1" style="color:var(--text2)">CASH AVAILABLE</div><div id="p-cash" class="text-xl font-black">--</div></div>
+        <div class="card p-4"><div class="text-xs font-semibold mb-1" style="color:var(--text2)">PORTFOLIO VALUE</div><div id="p-val" class="text-xl font-black">--</div></div>
+        <div class="card p-4"><div class="text-xs font-semibold mb-1" style="color:var(--text2)">TOTAL P&L</div><div id="p-pnl" class="text-xl font-black">--</div></div>
+      </div>
+      <div class="card p-5 mb-5">
+        <h3 class="font-semibold text-sm mb-4">Holdings</h3>
+        <div id="p-hold" class="space-y-3"></div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm mb-3">Recent Transactions</h3>
+        <div id="p-hist" class="space-y-2 text-xs" style="color:var(--text2)"></div>
       </div>
     </div>
 
   </div>
 </div>
 
+<!-- ═══ FLOATING AI ════════════════════════════════════════════════════════════ -->
+<button id="fab" onclick="toggleAI()">AI</button>
+<div id="ai-drawer" class="card">
+  <div class="p-3 flex items-center justify-between" style="border-bottom:1px solid var(--border)">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full grad-bg flex items-center justify-center text-white text-xs font-black">AI</div>
+      <div><div class="text-sm font-semibold">StockSense AI</div><div class="text-xs" style="color:var(--green)" id="ai-status">Connecting...</div></div>
+    </div>
+    <button onclick="toggleAI()" style="color:var(--text2);font-size:1rem;background:none;border:none;cursor:pointer">✕</button>
+  </div>
+  <div id="ai-msgs" class="flex-1 overflow-y-auto p-3 space-y-3" style="max-height:360px">
+    <div class="flex gap-2 fade-in">
+      <div class="w-6 h-6 rounded-full grad-bg flex-shrink-0 flex items-center justify-center text-white text-xs font-black">AI</div>
+      <div class="chat-bubble-ai">Namaste! Main StockSense AI hoon — India ka sabse smart market advisor. Koi bhi stock, market trend, ya portfolio sawaal poochho! 📊</div>
+    </div>
+  </div>
+  <div class="p-3" style="border-top:1px solid var(--border)">
+    <div class="flex gap-2 mb-2">
+      <input id="ai-inp" class="inp flex-1 text-xs py-2" placeholder="Ask about any stock or market..."/>
+      <button onclick="sendAI()" class="btn btn-primary text-xs py-2 px-3">Send</button>
+    </div>
+    <div class="flex gap-1 flex-wrap">
+      <button onclick="aiQ('NIFTY kaise hai aaj?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2);cursor:pointer">NIFTY</button>
+      <button onclick="aiQ('Mera portfolio dikhao')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2);cursor:pointer">Portfolio</button>
+      <button onclick="aiQ('TCS buy karna chahiye?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2);cursor:pointer">TCS analysis</button>
+      <button onclick="aiQ('SIP kya hota hai?')" class="text-xs px-2 py-1 rounded-full" style="background:var(--inp-bg);color:var(--text2);cursor:pointer">SIP?</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── Config & State ────────────────────────────────────────────────────────────
 const API = 'http://localhost:8000';
-let marketData = {};
-let chatHistory = [];
-let ws = null;
-let chart = null;
+let token='', username='', userXp=0, userLevel=1, userId=0;
+let mktData={}, chartInst=null;
+let aiWs=null, newsWs=null, aiHistory=[], curAiEl=null;
+let aiReady=false, aiQueue=[];
+let quizData=[], quizIdx=0, quizScore=0, quizCat='', quizXp=10;
+let chType='', chPicks=[];
+let newsLoaded=false;
 
-function showApp() {
-  document.getElementById('landing').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function toggleTheme(){
+  const h=document.documentElement;
+  const isDark=h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('land-theme-toggle')?.classList.toggle('on',!isDark);
+  document.getElementById('app-theme-toggle')?.classList.toggle('on',!isDark);
+  localStorage.setItem('ss-theme',isDark?'light':'dark');
+}
+(function(){
+  const saved=localStorage.getItem('ss-theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+  if(saved==='light'){
+    document.getElementById('land-theme-toggle')?.classList.add('on');
+    document.getElementById('app-theme-toggle')?.classList.add('on');
+  }
+})();
+
+// ── Pages ─────────────────────────────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+function sw(tab){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>{t.classList.remove('tab-a');t.classList.add('tab-i')});
+  const el=document.getElementById('s-'+tab);
+  if(el){el.classList.add('on');el.classList.add('fade-in')}
+  const btn=document.getElementById('t-'+tab);
+  if(btn){btn.classList.add('tab-a');btn.classList.remove('tab-i')}
+  if(tab==='portfolio'){loadPortfolio();loadHistory();}
+  if(tab==='trade'){updateTradePrice();loadHistory();}
+  if(tab==='alerts'){loadWatchlist();}
+  if(tab==='news'){loadNews();}
+  if(tab==='workspace'){loadTasks();loadNotes();loadEvents();}
+  if(tab==='game'){loadGameStats();}
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function doLogin(){
+  const u=document.getElementById('li-u').value.trim();
+  const p=document.getElementById('li-p').value;
+  const err=document.getElementById('li-err');
+  if(!u||!p){showErr(err,'Please fill in username and password');return;}
+  try{
+    const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d=await r.json();
+    if(!r.ok){showErr(err,d.detail||'Login failed');return;}
+    setSession(d);enterApp();
+  }catch(e){showErr(err,'Cannot connect to server. Make sure the backend is running.');}
+}
+async function doSignup(){
+  const u=document.getElementById('su-u').value.trim();
+  const em=document.getElementById('su-e').value.trim();
+  const p=document.getElementById('su-p').value;
+  const err=document.getElementById('su-err');
+  if(!u||!p){showErr(err,'Username and password are required');return;}
+  if(p.length<6){showErr(err,'Password must be at least 6 characters');return;}
+  try{
+    const r=await fetch(API+'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,email:em,password:p})});
+    const d=await r.json();
+    if(!r.ok){showErr(err,d.detail||'Signup failed');return;}
+    setSession(d);enterApp();
+  }catch(e){showErr(err,'Cannot connect to server. Make sure the backend is running.');}
+}
+async function guestLogin(){
+  const u='guest_'+Math.random().toString(36).slice(2,8);
+  try{
+    const r=await fetch(API+'/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:'guest1234',email:''})});
+    const d=await r.json();
+    if(r.ok){setSession(d);enterApp();}
+    else{alert('Server not reachable. Run: uvicorn app:app --reload');}
+  }catch(e){alert('Server not running. Start it with: uvicorn app:app --reload');}
+}
+function setSession(d){
+  token=d.token;username=d.username;userId=d.user_id;userXp=d.xp||0;userLevel=d.level||1;
+  localStorage.setItem('ss_tok',token);localStorage.setItem('ss_usr',username);
+}
+function enterApp(){
+  showPage('pg-app');
+  document.getElementById('nav-user').textContent=username;
+  document.getElementById('nav-lv').textContent=userLevel;
+  document.getElementById('nav-xp').textContent=userXp;
+  document.getElementById('fab').style.display='flex';
+  buildFAQ();
   loadMarket();
-  loadPortfolio();
   loadHistory();
-  initChat();
+  loadPortfolio();
+  initAI();
+  setInterval(()=>{loadMarket();if(document.getElementById('s-alerts').classList.contains('on'))loadWatchlist();},30000);
 }
-
-function goBack() {
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('landing').classList.remove('hidden');
+function doLogout(){
+  token='';username='';
+  localStorage.removeItem('ss_tok');localStorage.removeItem('ss_usr');
+  document.getElementById('fab').style.display='none';
+  document.getElementById('ai-drawer').classList.remove('open');
+  if(aiWs){aiWs.close();aiWs=null;}
+  newsLoaded=false;
+  showPage('pg-land');
 }
+function showErr(el,msg){el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),5000);}
+window.addEventListener('load',()=>{
+  const t=localStorage.getItem('ss_tok');
+  const u=localStorage.getItem('ss_usr');
+  if(t&&u){token=t;username=u;enterApp();}
+  else{loadLandingMarket();}
+});
 
-function switchTab(tab) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => { t.classList.remove('tab-active'); t.classList.add('text-slate-400'); });
-  document.getElementById('sec-' + tab).classList.add('active');
-  const btn = document.getElementById('tab-' + tab);
-  btn.classList.add('tab-active'); btn.classList.remove('text-slate-400');
-  if (tab === 'portfolio') loadPortfolio();
-  if (tab === 'trade') updateTradePrice();
+// ── Market ────────────────────────────────────────────────────────────────────
+async function loadMarket(){
+  try{
+    const r=await fetch(API+'/api/market');
+    mktData=await r.json();
+    renderMktCards();renderStockGrid();renderTicker();renderChart();renderLandMarket();
+    updateDashXP();
+  }catch(e){}
 }
-
-async function loadMarket() {
-  try {
-    const res = await fetch(API + '/api/market');
-    marketData = await res.json();
-    renderMarketCards();
-    renderStockGrid();
-    renderTicker();
-    renderChart();
-  } catch(e) {
-    console.log('Market load error:', e);
-  }
+async function loadLandingMarket(){
+  try{const r=await fetch(API+'/api/market');mktData=await r.json();renderLandMarket();renderLandTicker();}catch(e){}
 }
-
-function renderMarketCards() {
-  const keys = ['NIFTY','SENSEX','RELIANCE','TCS'];
-  const container = document.getElementById('market-cards');
-  container.innerHTML = keys.map(k => `
-    <div class="glass rounded-xl p-4">
-      <div class="text-xs text-slate-400 mb-1">${k}</div>
-      <div class="text-lg font-black">₹${Number(marketData[k]||0).toLocaleString('en-IN', {maximumFractionDigits:2})}</div>
+function renderLandMarket(){
+  const keys=['NIFTY','SENSEX','RELIANCE','TCS'];
+  const el=document.getElementById('land-mkt-cards');
+  if(!el)return;
+  el.innerHTML=keys.map(k=>{
+    const v=mktData[k]||0;
+    return`<div class="card p-4"><div class="text-xs font-semibold mb-1" style="color:var(--text2)">${k}</div><div class="text-xl font-black">₹${fmt(v)}</div></div>`;
+  }).join('');
+  const sg=document.getElementById('land-stocks');
+  if(!sg)return;
+  const stocks=['INFY','HDFC','ICICI','WIPRO','BAJAJ','MARUTI','TATAMOTORS','SUNPHARMA'];
+  sg.innerHTML=stocks.filter(s=>mktData[s]).map(s=>`<div class="card-sm p-3"><div class="text-xs font-semibold mb-0.5" style="color:var(--text2)">${s}</div><div class="font-bold">₹${fmt(mktData[s])}</div></div>`).join('');
+}
+function renderLandTicker(){
+  const el=document.getElementById('land-ticker');if(!el)return;
+  const items=Object.entries(mktData).map(([k,v])=>`<span style="color:var(--text2)">${k}</span> <span style="color:var(--blue);font-weight:600">₹${fmt(v,0)}</span>`);
+  el.innerHTML=[...items,...items].join('<span style="color:var(--border2);margin:0 12px">|</span>');
+}
+function renderTicker(){
+  const el=document.getElementById('app-ticker');if(!el)return;
+  const items=Object.entries(mktData).map(([k,v])=>`<span style="color:var(--text2)">${k}</span> <span style="color:var(--blue);font-weight:600">₹${fmt(v,0)}</span>`);
+  el.innerHTML=[...items,...items].join('<span style="color:var(--border2);margin:0 12px">|</span>');
+}
+function renderMktCards(){
+  const keys=['NIFTY','SENSEX','RELIANCE','TCS'];
+  const el=document.getElementById('mkt-cards');if(!el)return;
+  el.innerHTML=keys.map(k=>{
+    const v=mktData[k]||0;
+    return`<div class="card p-4"><div class="text-xs font-semibold mb-1" style="color:var(--text2)">${k}</div><div class="text-xl font-black">₹${fmt(v)}</div><div class="text-xs mt-1" style="color:var(--green)">NSE Live</div></div>`;
+  }).join('');
+}
+function renderStockGrid(){
+  const stocks=['INFY','HDFC','ICICI','WIPRO','BAJAJ','MARUTI','TATAMOTORS','SUNPHARMA','HCLTECH','LTIM'];
+  const el=document.getElementById('stock-grid');if(!el)return;
+  el.innerHTML=stocks.filter(s=>mktData[s]).map(s=>`
+    <div class="card-sm p-3 cursor-pointer transition" style="transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor=''" onclick="aiQ('Tell me about ${s} stock — should I buy?')">
+      <div class="text-xs font-semibold mb-0.5" style="color:var(--text2)">${s}</div>
+      <div class="font-bold text-sm">₹${fmt(mktData[s])}</div>
+      <div class="text-xs mt-1" style="color:var(--blue)">Ask AI →</div>
     </div>`).join('');
 }
-
-function renderStockGrid() {
-  const stocks = ['INFY','HDFC','ICICI','WIPRO','BAJAJ','MARUTI','TATAMOTORS'];
-  const g = document.getElementById('stock-grid');
-  g.innerHTML = stocks.filter(s => marketData[s]).map(s => `
-    <div class="glass rounded-xl p-3 cursor-pointer hover:bg-white/5 transition" onclick="askSuggested('Tell me about ${s} stock')">
-      <div class="text-xs text-slate-400 mb-1">${s}</div>
-      <div class="font-bold">₹${Number(marketData[s]||0).toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
-    </div>`).join('');
+function renderChart(){
+  const stocks=['RELIANCE','TCS','INFY','HDFC','ICICI','WIPRO'];
+  const labels=stocks.filter(s=>mktData[s]);
+  const values=labels.map(s=>mktData[s]);
+  if(chartInst)chartInst.destroy();
+  const ctx=document.getElementById('mkt-chart')?.getContext('2d');if(!ctx)return;
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  chartInst=new Chart(ctx,{type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:'rgba(59,158,255,.25)',borderColor:'rgba(59,158,255,.7)',borderWidth:1,borderRadius:6,hoverBackgroundColor:'rgba(59,158,255,.4)'}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'₹'+fmt(c.raw)}}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'var(--text2)',font:{size:10}}},
+              y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'var(--text2)',font:{size:9},callback:v=>'₹'+(v>=1000?(v/1000).toFixed(0)+'k':v)}}}}});
+}
+function updateDashXP(){
+  const xpInLv=userXp%100;
+  document.getElementById('d-lv').textContent=userLevel;
+  document.getElementById('d-xp').textContent=userXp;
+  document.getElementById('d-xp-next').textContent=(Math.ceil(userXp/100)*100);
+  document.getElementById('d-xpbar').style.width=xpInLv+'%';
 }
 
-function renderTicker() {
-  const items = Object.entries(marketData).map(([k,v]) => `<span class="text-slate-300">${k}</span> <span class="text-sky-400">₹${Number(v).toLocaleString('en-IN',{maximumFractionDigits:0})}</span>`);
-  const doubled = [...items,...items].join('<span class="text-white/20 mx-4">|</span>');
-  document.getElementById('ticker').innerHTML = doubled;
+// ── Portfolio ─────────────────────────────────────────────────────────────────
+async function loadPortfolio(){
+  try{
+    const r=await aFetch('/api/portfolio');const d=await r.json();
+    document.getElementById('p-cash').textContent='₹'+fmt(d.cash);
+    document.getElementById('p-val').textContent='₹'+fmt(d.total_value);
+    const pnl=d.holdings.reduce((s,h)=>s+h.pnl,0);
+    const pe=document.getElementById('p-pnl');
+    pe.textContent=(pnl>=0?'+':'')+'₹'+fmt(Math.abs(pnl));
+    pe.style.color=pnl>=0?'var(--green)':'var(--red)';
+    // Update trade cash display
+    const tc=document.getElementById('tr-cash');if(tc)tc.textContent='₹'+fmt(d.cash);
+    const ph=document.getElementById('p-hold');
+    if(!ph)return;
+    if(!d.holdings.length){ph.innerHTML=`<div class="text-sm text-center py-6" style="color:var(--text3)">No holdings yet. Go to Trade to buy your first stock.</div>`;return;}
+    ph.innerHTML=d.holdings.map(h=>{
+      const pct=Math.min(100,Math.abs(h.value/d.total_value*100));
+      return`<div class="card-sm p-4">
+        <div class="flex justify-between items-start mb-2">
+          <div><div class="font-semibold">${h.symbol}</div><div class="text-xs" style="color:var(--text2)">${h.quantity.toFixed(3)} shares · Avg ₹${fmt(h.avg_price)}</div></div>
+          <div class="text-right"><div class="font-semibold">₹${fmt(h.value)}</div><div class="text-xs" style="color:${h.pnl>=0?'var(--green)':'var(--red)'}">${h.pnl>=0?'+':''}₹${fmt(Math.abs(h.pnl))} (${h.pnl_pct.toFixed(1)}%)</div></div>
+        </div>
+        <div class="holding-bar" style="width:${pct}%"></div>
+      </div>`;}).join('');
+  }catch(e){}
 }
-
-function renderChart() {
-  const stocks = ['RELIANCE','TCS','INFY','HDFC','ICICI','WIPRO'];
-  const labels = stocks.filter(s => marketData[s]);
-  const values = labels.map(s => marketData[s]);
-  if (chart) chart.destroy();
-  const ctx = document.getElementById('marketChart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: 'rgba(56,189,248,0.3)',
-        borderColor: 'rgba(56,189,248,0.8)',
-        borderWidth: 1, borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { size: 10 },
-          callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v) }}
-      }
+async function loadHistory(){
+  try{
+    const r=await aFetch('/api/history');const d=await r.json();
+    const tr=document.getElementById('tr-hist');const ph=document.getElementById('p-hist');
+    if(!d.length){
+      if(tr)tr.innerHTML='<div class="text-center py-4" style="color:var(--text3)">No trades yet. Buy your first stock!</div>';
+      if(ph)ph.innerHTML='<div class="text-center py-4" style="color:var(--text3)">No transactions yet.</div>';
+      return;
     }
-  });
-}
-
-async function loadPortfolio() {
-  try {
-    const res = await fetch(API + '/api/portfolio');
-    const data = await res.json();
-    document.getElementById('p-cash').textContent = '₹' + Number(data.cash).toLocaleString('en-IN', {maximumFractionDigits:0});
-    document.getElementById('p-value').textContent = '₹' + Number(data.total_value).toLocaleString('en-IN', {maximumFractionDigits:0});
-    const totalPnl = data.holdings.reduce((s,h) => s+h.pnl, 0);
-    const pnlEl = document.getElementById('p-pnl');
-    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '₹' + Math.abs(totalPnl).toLocaleString('en-IN',{maximumFractionDigits:0});
-    pnlEl.className = 'text-xl font-black ' + (totalPnl >= 0 ? 'pnl-pos' : 'pnl-neg');
-
-    const table = document.getElementById('holdings-table');
-    if (!data.holdings.length) { table.innerHTML = '<div class="text-slate-500 text-sm">No holdings yet. Go to Trade to buy your first stock.</div>'; return; }
-    table.innerHTML = data.holdings.map(h => `
-      <div class="flex items-center justify-between p-3 glass rounded-xl">
-        <div>
-          <div class="font-semibold">${h.symbol}</div>
-          <div class="text-xs text-slate-400">${h.quantity.toFixed(2)} shares · Avg ₹${h.avg_price.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
-        </div>
-        <div class="text-right">
-          <div class="font-semibold">₹${h.value.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
-          <div class="text-xs ${h.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${h.pnl >= 0 ? '+' : ''}₹${Math.abs(h.pnl).toLocaleString('en-IN',{maximumFractionDigits:0})} (${h.pnl_pct.toFixed(1)}%)</div>
-        </div>
-      </div>`).join('');
-  } catch(e) {}
-}
-
-async function updateTradePrice() {
-  const sym = document.getElementById('trade-symbol').value;
-  try {
-    const res = await fetch(API + '/api/market');
-    const data = await res.json();
-    const price = data[sym] || 0;
-    document.getElementById('trade-price').textContent = '₹' + Number(price).toLocaleString('en-IN', {maximumFractionDigits: 2});
-  } catch(e) {}
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const sel = document.getElementById('trade-symbol');
-  if (sel) sel.addEventListener('change', updateTradePrice);
-  const amt = document.getElementById('trade-amount');
-  if (amt) amt.addEventListener('input', showTradePreview);
-});
-
-function showTradePreview() {
-  const amt = parseFloat(document.getElementById('trade-amount').value);
-  const priceText = document.getElementById('trade-price').textContent.replace(/[₹,]/g,'');
-  const price = parseFloat(priceText);
-  const preview = document.getElementById('trade-preview');
-  if (amt && price) {
-    const qty = amt / price;
-    preview.textContent = `You will get approximately ${qty.toFixed(3)} shares at ₹${price.toLocaleString('en-IN')}`;
-    preview.classList.remove('hidden');
-  }
-}
-
-async function executeTrade(action) {
-  const symbol = document.getElementById('trade-symbol').value;
-  const amount = parseFloat(document.getElementById('trade-amount').value);
-  if (!amount || amount <= 0) { showTradeResult('Please enter a valid amount', false); return; }
-  try {
-    const res = await fetch(API + '/api/trade', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ symbol, action, amount })
-    });
-    const data = await res.json();
-    showTradeResult(data.message, data.success);
-    if (data.success) { loadHistory(); loadPortfolio(); }
-  } catch(e) { showTradeResult('Error connecting to server', false); }
-}
-
-function showTradeResult(msg, success) {
-  const el = document.getElementById('trade-result');
-  el.textContent = msg;
-  el.className = 'mt-4 p-3 rounded-lg text-sm text-center ' + (success ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400');
-  el.classList.remove('hidden');
-  setTimeout(() => el.classList.add('hidden'), 4000);
-}
-
-async function loadHistory() {
-  try {
-    const res = await fetch(API + '/api/history');
-    const data = await res.json();
-    const el = document.getElementById('trade-history');
-    if (!data.length) { el.innerHTML = '<div class="text-slate-500">No trades yet</div>'; return; }
-    el.innerHTML = data.map(t => `
-      <div class="flex items-center justify-between py-2 border-b border-white/5">
+    const rows=d.map(t=>`
+      <div class="flex justify-between items-center py-2" style="border-bottom:1px solid var(--border)">
         <div class="flex items-center gap-2">
-          <span class="px-2 py-0.5 rounded text-xs font-bold ${t.action === 'buy' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}">${t.action.toUpperCase()}</span>
-          <span class="font-medium">${t.symbol}</span>
-          <span class="text-slate-500">${t.quantity} shares</span>
+          <span class="badge ${t.action==='buy'?'badge-green':'badge-red'}">${t.action.toUpperCase()}</span>
+          <span class="font-semibold">${t.symbol}</span>
+          <span style="color:var(--text3)">${t.quantity} shares</span>
         </div>
-        <div class="text-right">
-          <div>₹${Number(t.total).toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
-          <div class="text-slate-500 text-xs">${t.timestamp}</div>
+        <div class="text-right"><div class="font-semibold">₹${fmt(t.total)}</div><div style="color:var(--text3);font-size:.7rem">${t.timestamp}</div></div>
+      </div>`).join('');
+    if(tr)tr.innerHTML=rows;
+    if(ph)ph.innerHTML=rows;
+  }catch(e){}
+}
+
+// ── Trade ─────────────────────────────────────────────────────────────────────
+async function updateTradePrice(){
+  const sym=document.getElementById('tr-sym')?.value;if(!sym)return;
+  if(mktData[sym]){document.getElementById('tr-price').textContent='₹'+fmt(mktData[sym]);}
+  else{try{const r=await fetch(API+'/api/market');const d=await r.json();document.getElementById('tr-price').textContent='₹'+fmt(d[sym]||0);}catch(e){}}
+}
+function tradePreview(){
+  const amt=parseFloat(document.getElementById('tr-amt').value);
+  const pTxt=document.getElementById('tr-price').textContent.replace(/[₹,]/g,'');
+  const p=parseFloat(pTxt);
+  const el=document.getElementById('tr-prev');
+  if(amt&&p){el.textContent=`You will receive approx ${(amt/p).toFixed(4)} shares at ₹${fmt(p)} per share`;el.classList.remove('hidden');}
+  else{el.classList.add('hidden');}
+}
+async function doTrade(action){
+  const sym=document.getElementById('tr-sym').value;
+  const amt=parseFloat(document.getElementById('tr-amt').value);
+  if(!amt||amt<=0){showTR('Enter a valid amount',false);return;}
+  try{
+    const r=await aFetch('/api/trade','POST',{symbol:sym,action,amount:amt});
+    const d=await r.json();
+    showTR(d.message,d.success);
+    if(d.success){
+      loadHistory();loadPortfolio();
+      // Update XP
+      if(action==='buy')userXp+=5; else userXp+=3;
+      if(action==='sell')userXp+=10;
+      userLevel=Math.max(1,Math.floor(userXp/100)+1);
+      document.getElementById('nav-xp').textContent=userXp;
+      document.getElementById('nav-lv').textContent=userLevel;
+      updateDashXP();
+    }
+  }catch(e){showTR('Server error — check backend',false);}
+}
+function showTR(msg,ok){
+  const el=document.getElementById('tr-res');
+  el.textContent=msg;el.classList.remove('hidden');
+  el.style.background=ok?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)';
+  el.style.color=ok?'var(--green)':'var(--red)';
+  setTimeout(()=>el.classList.add('hidden'),5000);
+}
+
+// ── Watchlist / Alerts ────────────────────────────────────────────────────────
+async function addWatch(){
+  const sym=document.getElementById('w-sym').value;
+  const price=parseFloat(document.getElementById('w-price').value);
+  const type=document.getElementById('w-type').value;
+  const res=document.getElementById('w-res');
+  if(!price||price<=0){showWR('Enter a valid target price',false,res);return;}
+  try{
+    const r=await aFetch('/api/watchlist','POST',{symbol:sym,target_price:price,alert_type:type});
+    const d=await r.json();
+    showWR(d.message,d.success,res);
+    document.getElementById('w-price').value='';
+    loadWatchlist();
+  }catch(e){showWR('Server error',false,res);}
+}
+function showWR(msg,ok,el){
+  el.textContent=msg;el.classList.remove('hidden');
+  el.style.background=ok?'rgba(52,211,153,.1)':'rgba(248,113,113,.1)';
+  el.style.color=ok?'var(--green)':'var(--red)';
+  setTimeout(()=>el.classList.add('hidden'),4000);
+}
+async function loadWatchlist(){
+  try{
+    const r=await aFetch('/api/watchlist');const d=await r.json();
+    const el=document.getElementById('w-list');if(!el)return;
+    if(!d.length){el.innerHTML='<div class="text-xs text-center py-5" style="color:var(--text3)">No alerts set. Add one above to get notified when stocks hit your target.</div>';return;}
+    const triggered=d.filter(w=>w.triggered);
+    if(triggered.length){
+      document.getElementById('alert-txt').textContent=triggered.map(w=>`🔔 ${w.symbol} hit target ₹${fmt(w.target_price)}`).join(' · ');
+      document.getElementById('alert-banner').classList.remove('hidden');
+    }
+    el.innerHTML=d.map(w=>`
+      <div class="card-sm p-4 mb-2 ${w.triggered?'':''}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="text-xl">${w.triggered?'🔔':'○'}</div>
+            <div>
+              <div class="font-semibold text-sm">${w.symbol}</div>
+              <div class="text-xs" style="color:var(--text2)">${w.alert_type==='above'?'Alert above':'Alert below'} ₹${fmt(w.target_price)}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold" style="color:${w.triggered?'var(--green)':'var(--text)'}">₹${fmt(w.current_price)}</div>
+            <div class="text-xs" style="color:${w.diff_pct>=0?'var(--green)':'var(--red)'}">${w.diff_pct>=0?'+':''}${w.diff_pct}% from target</div>
+            <button onclick="delWatch('${w.symbol}')" class="text-xs mt-1" style="color:var(--text3)">Remove</button>
+          </div>
+        </div>
+        ${w.triggered?`<div class="text-xs mt-2 font-semibold" style="color:var(--green)">Alert triggered! Your target price has been ${w.alert_type==='above'?'crossed':'reached'}.</div>`:''}
+      </div>`).join('');
+  }catch(e){}
+}
+async function delWatch(sym){await aFetch('/api/watchlist/'+sym,'DELETE');loadWatchlist();}
+
+// ── News AI ───────────────────────────────────────────────────────────────────
+async function loadNews(){
+  if(newsLoaded)return;
+  const el=document.getElementById('news-list');
+  try{
+    const r=await fetch(API+'/api/news');const d=await r.json();
+    el.innerHTML=d.headlines.map((h,i)=>`
+      <div class="card p-4 cursor-pointer transition" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor=''" onclick="explainNews(this,'${h.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+        <div class="flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg grad-bg flex-shrink-0 flex items-center justify-center text-white text-xs font-black">${i+1}</div>
+          <div><div class="text-sm font-medium leading-snug mb-1">${h}</div><div class="text-xs" style="color:var(--blue)">Click to understand this in simple language →</div></div>
         </div>
       </div>`).join('');
-  } catch(e) {}
+    newsLoaded=true;
+  }catch(e){el.innerHTML='<div class="text-sm text-center py-4" style="color:var(--text3)">Could not load news. Make sure backend is running.</div>';}
+}
+function explainNews(card,headline){
+  const panel=document.getElementById('news-panel');
+  const expEl=document.getElementById('news-exp');
+  document.getElementById('news-hl').textContent=headline;
+  expEl.textContent='';
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(newsWs)newsWs.close();
+  newsWs=new WebSocket('ws://localhost:8000/ws/news');
+  newsWs.onopen=()=>newsWs.send(JSON.stringify({headline}));
+  newsWs.onmessage=(e)=>{const d=JSON.parse(e.data);if(d.type==='chunk')expEl.textContent+=d.text;if(d.type==='done')newsWs.close();if(d.type==='error')expEl.textContent='AI error: '+d.text;};
 }
 
-function initChat() {
-  if (ws) ws.close();
-  ws = new WebSocket('ws://localhost:8000/ws/chat');
-  ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    if (data.type === 'chunk') appendChunk(data.text);
-    if (data.type === 'done') finaliseMsg();
+// ── Workspace ─────────────────────────────────────────────────────────────────
+async function loadTasks(){
+  try{const r=await aFetch('/api/tasks');const d=await r.json();
+  const el=document.getElementById('task-list');
+  el.innerHTML=d.length?d.map(t=>`
+    <div class="flex items-center gap-2 py-1 fade-in">
+      <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask(${t.id})" style="accent-color:var(--blue);width:14px;height:14px"/>
+      <span class="flex-1 ${t.done?'line-through':''}\" style="color:${t.done?'var(--text3)':'var(--text)'}">${t.title}</span>
+      <button onclick="delTask(${t.id})" style="color:var(--text3);font-size:.7rem;background:none;border:none;cursor:pointer">✕</button>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:.75rem">No tasks yet</div>';
+  }catch(e){}
+}
+async function addTask(){const inp=document.getElementById('task-inp');const v=inp.value.trim();if(!v)return;await aFetch('/api/tasks','POST',{title:v});inp.value='';loadTasks();}
+async function toggleTask(id){await aFetch('/api/tasks/'+id,'PATCH');loadTasks();}
+async function delTask(id){await aFetch('/api/tasks/'+id,'DELETE');loadTasks();}
+
+async function loadNotes(){
+  try{const r=await aFetch('/api/notes');const d=await r.json();
+  const el=document.getElementById('note-list');
+  el.innerHTML=d.length?d.map(n=>`
+    <div class="fade-in p-2 rounded-xl" style="background:var(--inp-bg)">
+      <div class="flex justify-between gap-1">
+        <span class="flex-1 text-xs leading-relaxed">${n.content}</span>
+        <button onclick="delNote(${n.id})" style="color:var(--text3);font-size:.7rem;background:none;border:none;cursor:pointer;flex-shrink:0">✕</button>
+      </div>
+      <div class="text-xs mt-1" style="color:var(--text3)">${n.date}</div>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:.75rem">No notes yet</div>';
+  }catch(e){}
+}
+async function addNote(){const inp=document.getElementById('note-inp');const v=inp.value.trim();if(!v)return;await aFetch('/api/notes','POST',{content:v});inp.value='';loadNotes();}
+async function delNote(id){await aFetch('/api/notes/'+id,'DELETE');loadNotes();}
+
+async function loadEvents(){
+  try{const r=await aFetch('/api/events');const d=await r.json();
+  const el=document.getElementById('ev-list');
+  el.innerHTML=d.length?d.map(e=>`
+    <div class="fade-in flex items-center justify-between p-2 rounded-xl" style="background:var(--inp-bg)">
+      <div><div class="font-medium text-xs">${e.title}</div><div style="color:var(--text3);font-size:.7rem">${e.date}${e.time?' · '+e.time:''}</div></div>
+      <button onclick="delEvent(${e.id})" style="color:var(--text3);font-size:.7rem;background:none;border:none;cursor:pointer">✕</button>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:.75rem">No events yet</div>';
+  }catch(e){}
+}
+async function addEvent(){
+  const t=document.getElementById('ev-title').value.trim();
+  const dt=document.getElementById('ev-date').value;
+  const tm=document.getElementById('ev-time').value;
+  if(!t||!dt)return;
+  await aFetch('/api/events','POST',{title:t,date:dt,time:tm});
+  document.getElementById('ev-title').value='';document.getElementById('ev-date').value='';document.getElementById('ev-time').value='';
+  loadEvents();
+}
+async function delEvent(id){await aFetch('/api/events/'+id,'DELETE');loadEvents();}
+
+async function sendAgent(){
+  const inp=document.getElementById('ag-inp');const msg=inp.value.trim();if(!msg)return;inp.value='';
+  const out=document.getElementById('ag-out');
+  out.textContent='Routing to agent...';out.classList.remove('hidden');
+  try{
+    const r=await aFetch('/api/agent','POST',{message:msg});const d=await r.json();
+    out.innerHTML=`<span style="color:var(--blue);font-weight:600">→ ${d.routed_to}</span> <span style="color:var(--text2);margin-left:8px">${JSON.stringify(d.result)}</span>`;
+    if(d.routed_to==='task_agent')loadTasks();
+    if(d.routed_to==='notes_agent')loadNotes();
+    if(d.routed_to==='calendar_agent')loadEvents();
+  }catch(e){out.textContent='Error: '+e.message;}
+}
+
+// ── Game ──────────────────────────────────────────────────────────────────────
+const QUIZZES={
+  basics:{xp:10,qs:[
+    {q:"What is a stock?",opts:["A type of government bond","Ownership share in a company","A fixed deposit scheme","A type of insurance"],ans:1,exp:"Stock = equity ownership in a company. Jab aap stock kharidtey ho, aap company ke part-owner ban jaatey ho!"},
+    {q:"NIFTY 50 represents which exchange?",opts:["BSE","NSE","MCX","CDSL"],ans:1,exp:"NIFTY 50 is the benchmark index of NSE (National Stock Exchange). It tracks India's top 50 companies."},
+    {q:"A 'bull market' means prices are...",opts:["Falling","Stable","Rising","Controlled by RBI"],ans:2,exp:"Bull market = rising prices. Bears swipe down, bulls charge up — easy to remember!"},
+    {q:"Market capitalization = ?",opts:["Annual revenue","Share price × total shares","Net profit × P/E","Total assets"],ans:1,exp:"Market cap = Current Share Price × Total Shares Outstanding. It tells you a company's total market value."},
+    {q:"What is a dividend?",opts:["Fee to buy stocks","Company's profit shared with shareholders","Tax on capital gains","Broker's commission"],ans:1,exp:"Dividend = company distributes part of its profits to shareholders. It's passive income from investing!"},
+  ]},
+  technical:{xp:15,qs:[
+    {q:"RSI above 70 typically indicates...",opts:["Stock is undervalued","Stock may be overbought","Strong buy signal","Low volatility ahead"],ans:1,exp:"RSI > 70 = possibly overbought, price correction possible. RSI < 30 = oversold, potential bounce."},
+    {q:"'Golden Cross' occurs when...",opts:["Stock hits all-time high","50-day MA crosses above 200-day MA","P/E drops below 10","Volume spikes 3x"],ans:1,exp:"Golden Cross = 50-day Moving Average crosses above 200-day MA. Strong bullish signal in technical analysis!"},
+    {q:"What does a red (bearish) candlestick mean?",opts:["Closing price > opening","Volume was very high","Closing price < opening","Stock was halted midday"],ans:2,exp:"Red candle = stock closed LOWER than it opened that day. Green = closed higher than opened."},
+    {q:"'Support level' in technical analysis is...",opts:["Maximum all-time high price","Price floor where buying tends to emerge","Govt price guarantee","Broker's margin limit"],ans:1,exp:"Support = a price level where demand is strong enough to stop further decline. Think of it as a price floor."},
+    {q:"MACD stands for...",opts:["Market Average Cost Data","Moving Average Convergence Divergence","Maximum Absolute Change Daily","Mean Asset Correlation Derivative"],ans:1,exp:"MACD = Moving Average Convergence Divergence. It shows trend direction, momentum, and potential reversals."},
+  ]},
+  fundamental:{xp:20,qs:[
+    {q:"P/E ratio of 20 means investors pay ₹20 for every...",opts:["₹20 of revenue","₹1 of earnings","₹20 of assets","₹1 of dividend"],ans:1,exp:"P/E = Price ÷ EPS. P/E of 20 means market pays ₹20 for each ₹1 of company's annual earnings per share."},
+    {q:"EPS (Earnings Per Share) = ?",opts:["Equity × Price × Sales","Net Profit ÷ Total Shares","Revenue ÷ Market Cap","EBITDA ÷ Equity"],ans:1,exp:"EPS = Net Profit ÷ Total Shares. Higher EPS means more profit per share — generally bullish for stock price."},
+    {q:"High promoter holding (>60%) typically signals...",opts:["Company is going bankrupt","Promoters believe in the business","Poor governance","Stock is overvalued"],ans:1,exp:"High promoter holding = promoters have strong conviction in their own company. Skin in the game!"},
+    {q:"Debt-to-Equity ratio measures...",opts:["Revenue vs profit","Total debt ÷ shareholder equity","Market cap ÷ assets","Stock price ÷ book value"],ans:1,exp:"D/E = Total Debt ÷ Equity. Lower is safer. High D/E means company relies heavily on borrowed money."},
+    {q:"ROE (Return on Equity) tells you...",opts:["Revenue Over Expenses","How efficiently company uses shareholder money to generate profit","Rate Of Exchange","Ratio Of Earnings"],ans:1,exp:"ROE = Net Income ÷ Shareholder Equity. Higher ROE = company is more efficient at generating profit from equity."},
+  ]}
+};
+
+function loadGameStats(){
+  const xpInLv=userXp%100;
+  document.getElementById('g-level').textContent=userLevel;
+  document.getElementById('g-xp').textContent=userXp;
+  document.getElementById('g-xpbar').style.width=xpInLv+'%';
+  document.getElementById('g-xp-left').textContent=(100-xpInLv);
+  document.getElementById('g-uname').textContent=username||'Player';
+  const ranks=['Beginner','Market Learner','Trader','Analyst','Market Expert','Master Investor'];
+  document.getElementById('g-rank').textContent=ranks[Math.min(userLevel-1,ranks.length-1)];
+}
+function startQuiz(cat){
+  quizCat=cat;quizIdx=0;quizScore=0;
+  quizData=QUIZZES[cat].qs;quizXp=QUIZZES[cat].xp;
+  document.getElementById('g-home').classList.add('hidden');
+  document.getElementById('g-quiz').classList.remove('hidden');
+  document.getElementById('g-ch').classList.add('hidden');
+  renderQ();
+}
+function renderQ(){
+  const q=quizData[quizIdx];
+  document.getElementById('q-num').textContent=quizIdx+1;
+  document.getElementById('q-xp-val').textContent=quizXp;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-score').textContent=quizScore;
+  document.getElementById('q-tot').textContent=quizIdx;
+  document.getElementById('q-fb').classList.add('hidden');
+  document.getElementById('q-next-btn').classList.add('hidden');
+  document.getElementById('q-opts').innerHTML=q.opts.map((o,i)=>`<div class="quiz-opt" onclick="answerQ(${i})">${o}</div>`).join('');
+}
+function answerQ(i){
+  const q=quizData[quizIdx];
+  document.querySelectorAll('.quiz-opt').forEach(o=>o.style.pointerEvents='none');
+  document.querySelectorAll('.quiz-opt')[i].classList.add(i===q.ans?'correct':'wrong');
+  if(i!==q.ans)document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+  const fb=document.getElementById('q-fb');
+  fb.innerHTML=`<span style="font-weight:600;color:${i===q.ans?'var(--green)':'var(--red)'}">${i===q.ans?'Correct! ✓':'Incorrect ✗'}</span><br>${q.exp}`;
+  fb.classList.remove('hidden');
+  if(i===q.ans)quizScore++;
+  document.getElementById('q-tot').textContent=quizIdx+1;
+  document.getElementById('q-score').textContent=quizScore;
+  document.getElementById('q-next-btn').classList.remove('hidden');
+}
+async function nextQ(){
+  quizIdx++;
+  if(quizIdx>=quizData.length){
+    const xpEarned=quizScore*quizXp;
+    userXp+=xpEarned;userLevel=Math.max(1,Math.floor(userXp/100)+1);
+    document.getElementById('nav-xp').textContent=userXp;document.getElementById('nav-lv').textContent=userLevel;
+    document.getElementById('q-opts').innerHTML='';
+    document.getElementById('q-text').textContent=`Quiz done! You scored ${quizScore}/${quizData.length} — +${xpEarned} XP earned!`;
+    document.getElementById('q-fb').innerHTML=`<span style="color:var(--green);font-weight:600">🎉 +${xpEarned} XP added!</span> Keep going to level up.`;
+    document.getElementById('q-fb').classList.remove('hidden');
+    document.getElementById('q-next-btn').textContent='Back to Game →';
+    document.getElementById('q-next-btn').onclick=exitQuiz;
+    document.getElementById('q-next-btn').classList.remove('hidden');
+    loadGameStats();updateDashXP();
+    try{await aFetch('/api/game/quiz','POST',{category:quizCat,score:quizScore,total:quizData.length,xp_earned:xpEarned});}catch(e){}
+    return;
+  }
+  renderQ();
+}
+function exitQuiz(){
+  document.getElementById('g-quiz').classList.add('hidden');
+  document.getElementById('g-ch').classList.add('hidden');
+  document.getElementById('g-home').classList.remove('hidden');
+}
+function startChallenge(type){
+  chType=type;chPicks=[];
+  document.getElementById('g-home').classList.add('hidden');
+  document.getElementById('g-quiz').classList.add('hidden');
+  document.getElementById('g-ch').classList.remove('hidden');
+  document.getElementById('ch-result').classList.add('hidden');
+  document.getElementById('ch-submit-btn').classList.remove('hidden');
+  const stocks=['RELIANCE','TCS','INFY','HDFC','ICICI','WIPRO','BAJAJ','TATAMOTORS'];
+  document.getElementById('ch-title').textContent=type==='crash'?'Survive the Crash':'Bull Run Maximizer';
+  document.getElementById('ch-scenario').innerHTML=type==='crash'
+    ?'<strong>Scenario:</strong> Markets crash 20% next week — NIFTY drops from 22,500 → 18,000. You have ₹50,000. <strong>Pick 3 stocks</strong> you think will be most resilient. Hint: Look for defensive sectors, strong cash flows, low debt.'
+    :'<strong>Scenario:</strong> Markets are in a strong bull run, NIFTY up 18% YTD. You have ₹1,00,000. <strong>Pick 3 stocks</strong> you think will outperform the index. Hint: High-beta, high-momentum sectors tend to lead.';
+  document.getElementById('ch-stocks').innerHTML=stocks.map(s=>`
+    <div class="quiz-opt text-center text-xs" onclick="togglePick('${s}',this)" id="pick-${s}">
+      <div class="font-semibold">${s}</div>
+      <div class="mt-0.5" style="color:var(--text3)">₹${fmt(mktData[s]||0)}</div>
+    </div>`).join('');
+}
+function togglePick(sym,el){
+  if(el.classList.contains('correct')){el.classList.remove('correct');chPicks=chPicks.filter(s=>s!==sym);return;}
+  if(chPicks.length>=3)return;
+  chPicks.push(sym);el.classList.add('correct');
+}
+async function submitCh(){
+  if(chPicks.length<3){alert('Please select 3 stocks');return;}
+  const xpEarned=50;userXp+=xpEarned;userLevel=Math.max(1,Math.floor(userXp/100)+1);
+  document.getElementById('nav-xp').textContent=userXp;document.getElementById('nav-lv').textContent=userLevel;
+  const goodDefensive=['HDFC','TCS','INFY'];const goodBull=['BAJAJ','TATAMOTORS','RELIANCE'];
+  const good=chType==='crash'?goodDefensive:goodBull;
+  const overlap=chPicks.filter(p=>good.includes(p)).length;
+  const fb=overlap>=2?'Great picks! You chose well for this scenario.':'Interesting picks! For this scenario, consider: '+good.join(', ')+' — they typically perform better here.';
+  const el=document.getElementById('ch-result');
+  el.innerHTML=`<div style="font-weight:600;color:var(--green);margin-bottom:6px">+${xpEarned} XP earned!</div><div style="margin-bottom:6px">Your picks: <strong>${chPicks.join(', ')}</strong></div><div style="color:var(--text)">${fb}</div>`;
+  el.classList.remove('hidden');
+  el.style.background='rgba(52,211,153,.08)';el.style.border='1px solid rgba(52,211,153,.2)';
+  document.getElementById('ch-submit-btn').classList.add('hidden');
+  loadGameStats();updateDashXP();
+  try{await aFetch('/api/game/quiz','POST',{category:'challenge_'+chType,score:1,total:1,xp_earned:xpEarned});}catch(e){}
+}
+
+// ── AI Bot (FIXED) ────────────────────────────────────────────────────────────
+function toggleAI(){document.getElementById('ai-drawer').classList.toggle('open');}
+
+function initAI(){
+  if(aiWs){try{aiWs.close();}catch(e){}}
+  aiReady=false;
+  document.getElementById('ai-status').textContent='Connecting...';
+  document.getElementById('ai-status').style.color='var(--amber)';
+
+  aiWs=new WebSocket('ws://localhost:8000/ws/chat');
+
+  aiWs.onopen=()=>{
+    // Send auth token first — server waits for this before entering loop
+    aiWs.send(JSON.stringify({token:token||''}));
+  };
+
+  aiWs.onmessage=(e)=>{
+    const d=JSON.parse(e.data);
+    if(d.type==='ready'){
+      aiReady=true;
+      document.getElementById('ai-status').textContent='Online · Market-aware';
+      document.getElementById('ai-status').style.color='var(--green)';
+      // Flush any queued messages
+      while(aiQueue.length){aiWs.send(JSON.stringify(aiQueue.shift()));}
+      return;
+    }
+    if(d.type==='chunk'){appendChunk(d.text);return;}
+    if(d.type==='done'){finalizeAI();return;}
+    if(d.type==='error'){
+      appendChunk('\n[AI Error: '+d.text+']');finalizeAI();
+    }
+  };
+
+  aiWs.onclose=()=>{
+    aiReady=false;
+    document.getElementById('ai-status').textContent='Reconnecting...';
+    document.getElementById('ai-status').style.color='var(--red)';
+    setTimeout(initAI,3000);
+  };
+
+  aiWs.onerror=()=>{
+    aiReady=false;
+    document.getElementById('ai-status').textContent='Connection error';
+    document.getElementById('ai-status').style.color='var(--red)';
   };
 }
 
-let currentAiMsg = null;
-
-function appendChunk(text) {
-  if (!currentAiMsg) {
-    currentAiMsg = document.createElement('div');
-    currentAiMsg.className = 'chat-msg flex gap-3';
-    currentAiMsg.innerHTML = `
-      <div class="w-7 h-7 rounded-full btn-primary flex items-center justify-center text-xs font-black flex-shrink-0">AI</div>
-      <div class="glass rounded-2xl rounded-tl-sm px-4 py-3 text-sm max-w-xs md:max-w-sm msg-text"></div>`;
-    document.getElementById('chat-messages').appendChild(currentAiMsg);
+function appendChunk(text){
+  if(!curAiEl){
+    const wrap=document.createElement('div');
+    wrap.className='flex gap-2 fade-in';
+    wrap.innerHTML='<div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:900;background:linear-gradient(135deg,#3b9eff,#818cf8)">AI</div><div class="chat-bubble-ai"></div>';
+    document.getElementById('ai-msgs').appendChild(wrap);
+    curAiEl=wrap.querySelector('.chat-bubble-ai');
   }
-  currentAiMsg.querySelector('.msg-text').textContent += text;
-  scrollChat();
+  curAiEl.textContent+=text;
+  const msgs=document.getElementById('ai-msgs');msgs.scrollTop=msgs.scrollHeight;
 }
-
-function finaliseMsg() {
-  if (currentAiMsg) {
-    const text = currentAiMsg.querySelector('.msg-text').textContent;
-    chatHistory.push({ role: 'assistant', content: text });
+function finalizeAI(){
+  if(curAiEl){aiHistory.push({role:'assistant',content:curAiEl.textContent});}
+  curAiEl=null;
+}
+function sendAI(){
+  const inp=document.getElementById('ai-inp');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  // Add user bubble
+  const wrap=document.createElement('div');
+  wrap.className='flex justify-end fade-in';
+  wrap.innerHTML=`<div class="chat-bubble-user">${msg}</div>`;
+  document.getElementById('ai-msgs').appendChild(wrap);
+  const msgs=document.getElementById('ai-msgs');msgs.scrollTop=msgs.scrollHeight;
+  aiHistory.push({role:'user',content:msg});
+  const payload={message:msg,history:aiHistory.slice(-10)};
+  if(aiReady&&aiWs&&aiWs.readyState===WebSocket.OPEN){
+    aiWs.send(JSON.stringify(payload));
+  } else {
+    // Queue it — will be sent once ready
+    aiQueue.push(payload);
+    if(!aiWs||aiWs.readyState===WebSocket.CLOSED)initAI();
   }
-  currentAiMsg = null;
+}
+function aiQ(msg){document.getElementById('ai-drawer').classList.add('open');document.getElementById('ai-inp').value=msg;sendAI();}
+
+// Quick ask from dashboard
+async function quickAsk(){
+  const inp=document.getElementById('qi-inp');const msg=inp.value.trim();if(!msg)return;inp.value='';
+  const out=document.getElementById('qi-out');out.textContent='Thinking...';out.style.color='var(--text3)';
+  const payload={message:msg,history:[]};
+  if(aiReady&&aiWs&&aiWs.readyState===WebSocket.OPEN){
+    let resp='';const orig=aiWs.onmessage;
+    aiWs.onmessage=(e)=>{const d=JSON.parse(e.data);if(d.type==='chunk'){resp+=d.text;out.textContent=resp;out.style.color='var(--text)';}if(d.type==='done'){aiWs.onmessage=orig;}};
+    aiWs.send(JSON.stringify(payload));
+  } else {
+    out.textContent='AI is connecting... Try again in 3 seconds or use the floating AI button.';
+  }
+}
+function qi(msg){document.getElementById('qi-inp').value=msg;quickAsk();}
+
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+const FAQS=[
+  {q:"Is StockSense AI free?",a:"Yes! Core features are completely free — live market data, AI news explanations, paper trading, and quizzes. The Pro plan at ₹299/month unlocks unlimited AI chat and advanced features."},
+  {q:"Is this real money trading?",a:"No. StockSense AI uses paper trading — you get ₹1,00,000 in virtual money to practice with real market prices. No real money is involved."},
+  {q:"How accurate is the AI?",a:"The AI uses Claude (by Anthropic) with live market data. It's excellent for explaining concepts, analysing trends, and answering market questions. It's not a certified financial advisor and should not be the sole basis for investment decisions."},
+  {q:"Is my data safe?",a:"Yes. Passwords are hashed and never stored in plain text. We don't sell your data to third parties. Your portfolio data stays private to your account."},
+  {q:"Can I use this on mobile?",a:"The web app is fully responsive and works on mobile browsers. Native apps for Android and iOS are coming soon."},
+  {q:"How does the AI chat work?",a:"The AI has access to live market prices and your portfolio data. Ask it anything — stock analysis, market trends, what a financial term means — in English or Hinglish."},
+];
+function buildFAQ(){
+  const el=document.getElementById('faq-list');if(!el)return;
+  el.innerHTML=FAQS.map((f,i)=>`
+    <div class="card p-4 cursor-pointer" onclick="toggleFAQ(${i},this)">
+      <div class="flex justify-between items-center">
+        <div class="font-semibold text-sm">${f.q}</div>
+        <span class="text-lg" style="color:var(--text2)" id="faq-ico-${i}">+</span>
+      </div>
+      <div id="faq-ans-${i}" class="hidden text-sm mt-3 leading-relaxed" style="color:var(--text2)">${f.a}</div>
+    </div>`).join('');
+}
+function toggleFAQ(i,el){
+  const ans=document.getElementById('faq-ans-'+i);
+  const ico=document.getElementById('faq-ico-'+i);
+  const open=!ans.classList.contains('hidden');
+  ans.classList.toggle('hidden',open);
+  ico.textContent=open?'+':'−';
 }
 
-function scrollChat() {
-  const c = document.getElementById('chat-messages');
-  c.scrollTop = c.scrollHeight;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmt(n,dec=2){return Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:dec});}
+function aFetch(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}};
+  if(body)opts.body=JSON.stringify(body);
+  return fetch(API+path,opts);
 }
 
-function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  addUserMsg(msg);
-  if (!ws || ws.readyState !== WebSocket.OPEN) initChat();
-  chatHistory.push({ role: 'user', content: msg });
-  ws.send(JSON.stringify({ message: msg, history: chatHistory.slice(-10) }));
-}
-
-function addUserMsg(msg) {
-  const div = document.createElement('div');
-  div.className = 'chat-msg flex justify-end';
-  div.innerHTML = `<div class="px-4 py-3 rounded-2xl rounded-tr-sm text-sm max-w-xs" style="background:linear-gradient(135deg,rgba(56,189,248,0.2),rgba(129,140,248,0.2));border:1px solid rgba(56,189,248,0.2)">${msg}</div>`;
-  document.getElementById('chat-messages').appendChild(div);
-  scrollChat();
-}
-
-function askSuggested(msg) {
-  switchTab('ai');
-  setTimeout(() => {
-    document.getElementById('chat-input').value = msg;
-    sendChat();
-  }, 100);
-}
-
-async function quickAsk() {
-  const input = document.getElementById('quick-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-  const container = document.getElementById('quick-insights');
-  container.innerHTML = '<div class="p-3 rounded-lg bg-white/5 text-xs text-slate-400">Thinking...</div>';
-  if (!ws || ws.readyState !== WebSocket.OPEN) initChat();
-  let response = '';
-  const orig = ws.onmessage;
-  ws.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    if (data.type === 'chunk') { response += data.text; container.innerHTML = `<div class="p-3 rounded-lg bg-white/5 text-xs text-slate-300">${response}</div>`; }
-    if (data.type === 'done') ws.onmessage = orig;
-  };
-  ws.send(JSON.stringify({ message: msg, history: [] }));
-}
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && document.activeElement.id === 'chat-input') sendChat();
-  if (e.key === 'Enter' && document.activeElement.id === 'quick-input') quickAsk();
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.activeElement.id==='ai-inp')sendAI();
+  if(e.key==='Enter'&&document.activeElement.id==='qi-inp')quickAsk();
+  if(e.key==='Enter'&&document.activeElement.id==='task-inp')addTask();
 });
 
-setInterval(() => { if (document.getElementById('app') && !document.getElementById('app').classList.contains('hidden')) loadMarket(); }, 30000);
+// Build FAQ on landing page load
+document.addEventListener('DOMContentLoaded',()=>buildFAQ());
 </script>
 </body>
 </html>
