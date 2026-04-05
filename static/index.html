@@ -733,7 +733,7 @@ select.inp option{background:var(--bg2);color:var(--text)}
 
 <script>
 // ── Config & State ────────────────────────────────────────────────────────────
-const API = 'http://localhost:8000';
+const API = 'https://stocksense-backend-gink.onrender.com';
 let token='', username='', userXp=0, userLevel=1, userId=0;
 let mktData={}, chartInst=null;
 let aiWs=null, newsWs=null, aiHistory=[], curAiEl=null;
@@ -1092,7 +1092,7 @@ function explainNews(card,headline){
   panel.classList.remove('hidden');
   panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   if(newsWs)newsWs.close();
-  newsWs=new WebSocket('ws://localhost:8000/ws/news');
+  newsWs=new WebSocket('wss://stocksense-backend-gink.onrender.com');
   newsWs.onopen=()=>newsWs.send(JSON.stringify({headline}));
   newsWs.onmessage=(e)=>{const d=JSON.parse(e.data);if(d.type==='chunk')expEl.textContent+=d.text;if(d.type==='done')newsWs.close();if(d.type==='error')expEl.textContent='AI error: '+d.text;};
 }
@@ -1303,7 +1303,7 @@ function initAI(){
   document.getElementById('ai-status').textContent='Connecting...';
   document.getElementById('ai-status').style.color='var(--amber)';
 
-  aiWs=new WebSocket('ws://localhost:8000/ws/chat');
+  aiWs=new WebSocket('wss://stocksense-backend-gink.onrender.com/ws/chat');
 
   aiWs.onopen=()=>{
     // Send auth token first — server waits for this before entering loop
